@@ -189,6 +189,53 @@ HorusAgent-AI features a centralized enterprise control panel enabling seamless 
 
 ---
 
+## 📦 One-Click Enterprise Project Bundle Export (.ZIP)
+
+HorusAgent-AI enables engineers to download the entire synthesized architecture as a production-ready, runnable project bundle:
+
+- **Runnable Microservice**: Auto-extracted Python / FastAPI service implementation (`src/service.py`).
+- **Complete Architectural Blueprint**: In-depth topology, data flows, and design rationale (`src/architecture.md`).
+- **Containerization**: Production-ready `Dockerfile` and `docker-compose.yml` pre-configured for instant deployment.
+- **Critic Anti-Hallucination Audit**: Detailed review report with confidence rating and reflection findings (`docs/CRITIC_AUDIT.md`).
+- **Vector Citations**: JSON manifest of all 128-dim grounded semantic knowledge chunks (`docs/VECTOR_CITATIONS.json`).
+- **FDA 21 CFR Part 11 Cryptographic Seal**: Immutable SHA-256 seal record with GxP ALCOA+ compliance manifest (`docs/FDA_GOVERNANCE_SEAL.json`).
+
+---
+
+## 💻 Horus CLI — Terminal Command Center
+
+HorusAgent-AI provides a command-line interface (`horus-cli`) for DevOps engineers and SRE teams to orchestrate swarms and execute vector operations directly from the terminal:
+
+```bash
+# Install CLI package
+cd cli && pip install -e .
+
+# Or run directly inside the Docker container
+docker exec -it horus_backend horus --help
+```
+
+### Essential CLI Commands
+```bash
+# 1. Platform status & health inspection
+horus status
+
+# 2. Launch autonomous swarm mission with automatic ZIP export
+horus mission "Design a zero-trust ingress mesh with Envoy and mTLS" --export ./mesh-bundle.zip
+
+# 3. Vector RAG semantic search (Cosine similarity against 128-dim vectors)
+horus rag search "How does ALCOA+ define data integrity in thermal logging?"
+
+# 4. Ingest new knowledge chunks into the vector store
+horus rag ingest --title "Kafka Event Sourcing Spec" --category MICROSERVICES ./spec.md
+
+# 5. Manage frontier AI providers & measure ping latency
+horus providers list
+horus providers ping GROQ
+horus providers set-key GROQ "gsk_xxxxxxx" --model "llama-3.3-70b-versatile" --activate
+```
+
+---
+
 ## 📡 REST & WebSocket API Reference
 
 | Endpoint | Method | Protocol | Description |
@@ -196,6 +243,7 @@ HorusAgent-AI features a centralized enterprise control panel enabling seamless 
 | `/ws/agent-stream` | `GET` | **WebSocket** | Real-time bi-directional agent thought stream and token broadcaster |
 | `/api/v1/missions/presets` | `GET` | HTTP | Returns curated enterprise mission templates and prompts |
 | `/api/v1/missions/execute` | `POST` | HTTP | Synchronous swarm execution fallback with complete `MissionResult` |
+| `/api/v1/missions/export-zip` | `POST` | HTTP | Packages synthesized architecture, code, dockerfiles & FDA seal into a downloadable ZIP bundle |
 | `/api/v1/rag/documents` | `GET` | HTTP | Lists all indexed vector chunks with category and metadata |
 | `/api/v1/rag/documents` | `POST` | HTTP | Ingests new custom documentation chunk and generates dense embedding |
 | `/api/v1/rag/search` | `POST` | HTTP | Direct semantic vector similarity search against indexed corpus |
@@ -212,7 +260,7 @@ HorusAgent-AI features a centralized enterprise control panel enabling seamless 
 
 ## 🧪 Automated Testing & Quality Assurance
 
-HorusAgent-AI includes an automated test suite verifying DAG compilation, anti-hallucination scoring, PII redaction, semantic cosine similarity, multi-provider dispatch, and live diagnostics:
+HorusAgent-AI includes an automated test suite verifying DAG compilation, anti-hallucination scoring, PII redaction, semantic cosine similarity, multi-provider dispatch, and project ZIP packaging:
 
 ```bash
 # Run backend pytest suite inside container
@@ -221,19 +269,20 @@ docker exec -e PYTHONPATH=/app horus_backend pytest -v
 
 ### Test Results
 ```
-tests/test_agents.py::test_orchestrator_dag_compilation PASSED           [  9%]
-tests/test_agents.py::test_critic_scoring PASSED                         [ 18%]
-tests/test_agents.py::test_governance_pii_sanitization PASSED            [ 27%]
-tests/test_agents.py::test_full_swarm_execution PASSED                   [ 36%]
-tests/test_providers.py::test_provider_manager_initialization PASSED    [ 45%]
-tests/test_providers.py::test_provider_save_key_and_model PASSED        [ 54%]
-tests/test_providers.py::test_provider_routing_rules PASSED             [ 63%]
-tests/test_providers.py::test_provider_presets PASSED                   [ 72%]
-tests/test_providers.py::test_provider_test_ping PASSED                 [ 81%]
-tests/test_rag.py::test_embedder_dimension_and_normalization PASSED      [ 90%]
+tests/test_agents.py::test_orchestrator_dag_compilation PASSED           [  8%]
+tests/test_agents.py::test_critic_scoring PASSED                         [ 16%]
+tests/test_agents.py::test_governance_pii_sanitization PASSED            [ 25%]
+tests/test_agents.py::test_full_swarm_execution PASSED                   [ 33%]
+tests/test_export_zip.py::test_export_mission_project_bundle_zip PASSED  [ 41%]
+tests/test_providers.py::test_get_providers_overview PASSED              [ 50%]
+tests/test_providers.py::test_save_and_test_provider PASSED              [ 58%]
+tests/test_providers.py::test_apply_preset PASSED                        [ 66%]
+tests/test_providers.py::test_analytics_endpoint PASSED                  [ 75%]
+tests/test_rag.py::test_embedder_dimension_and_normalization PASSED      [ 83%]
+tests/test_rag.py::test_cosine_similarity_identical_and_orthogonal PASSED [ 91%]
 tests/test_rag.py::test_vector_store_seed_and_search PASSED              [100%]
 
-======================== 11 passed in 4.18s (100% OK) ========================
+======================== 12 passed in 3.61s (100% OK) ========================
 ```
 
 ---

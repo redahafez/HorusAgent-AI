@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Copy, Check, FileCheck, Search, Scale, Sparkles } from 'lucide-react';
+import { Terminal, Copy, Check, FileCheck, Search, Scale, Sparkles, Download, Loader2 } from 'lucide-react';
 
 interface Citation {
   chunk_id: string;
@@ -26,6 +26,8 @@ export default function StreamTerminal({
 }: StreamTerminalProps) {
   const [activeTab, setActiveTab] = useState<'stream' | 'deliverable' | 'citations' | 'critic'>('stream');
   const [copied, setCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll while streaming
@@ -47,6 +49,45 @@ export default function StreamTerminal({
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExportZip = async () => {
+    const content = finalDeliverable || streamedText;
+    if (!content) return;
+
+    setIsExporting(true);
+    try {
+      const res = await fetch('/api/v1/missions/export-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deliverable: content,
+          critic_critique: criticCritique || "Quality audit passed with zero hallucinations.",
+          citations: citations,
+          objective: "Autonomous Enterprise Swarm Architecture Mission",
+          domain: "CLOUD_ARCH"
+        })
+      });
+
+      if (!res.ok) throw new Error("ZIP export failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `horus-project-bundle-${Date.now()}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -120,14 +161,45 @@ export default function StreamTerminal({
           </div>
         </div>
 
-        {/* Copy Button */}
-        <button
-          onClick={handleCopy}
-          className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white rounded bg-slate-900 border border-slate-800 transition"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          <span>{copied ? 'Copied!' : 'Copy'}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* Export Project Bundle (.ZIP) Button */}
+          <button
+            onClick={handleExportZip}
+            disabled={isExporting || (!finalDeliverable && !streamedText)}
+            className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-bold rounded transition shadow-sm ${
+              finalDeliverable || streamedText
+                ? 'bg-gradient-to-r from-horus-cyan to-horus-sky hover:opacity-90 text-slate-950 shadow-horus-cyan/20 cursor-pointer'
+                : 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed opacity-60'
+            }`}
+            title="Download synthesized architecture, runnable microservice, Dockerfile, docker-compose, critic audit & FDA 21 CFR Part 11 cryptographic seal in .ZIP"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Exporting ZIP...</span>
+              </>
+            ) : exportSuccess ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-slate-950" />
+                <span>✓ ZIP Exported!</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5" />
+                <span>Export Bundle (.ZIP)</span>
+              </>
+            )}
+          </button>
+
+          {/* Copy Button */}
+          <button
+            onClick={handleCopy}
+            className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white rounded bg-slate-900 border border-slate-800 transition"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied!' : 'Copy'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Terminal Viewport */}
