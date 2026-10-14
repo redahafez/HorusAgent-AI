@@ -7,6 +7,7 @@ import AgentGraph, { AgentNodeState } from '@/components/AgentGraph';
 import MissionLauncher from '@/components/MissionLauncher';
 import StreamTerminal from '@/components/StreamTerminal';
 import KnowledgeExplorer from '@/components/KnowledgeExplorer';
+import AIControlPanel from '@/components/AIControlPanel';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -63,10 +64,12 @@ export default function Home() {
   const [verificationScore, setVerificationScore] = useState(0);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
+  const [isAIControlOpen, setIsAIControlOpen] = useState(false);
+  const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
 
   const socketRef = useRef<WebSocket | null>(null);
 
-  // Load Presets & Knowledge Docs on Mount
+  // Load Presets, Knowledge Docs & Active AI Provider on Mount
   useEffect(() => {
     fetch('/api/v1/missions/presets')
       .then((res) => res.json())
@@ -94,12 +97,25 @@ export default function Home() {
       });
 
     loadDocuments();
+    loadActiveProvider();
     initWebSocket();
 
     return () => {
       if (socketRef.current) socketRef.current.close();
     };
   }, []);
+
+  const loadActiveProvider = () => {
+    fetch('/api/v1/providers')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.active_provider) {
+          const prov = data.providers?.find((p: any) => p.id === data.active_provider);
+          setActiveProviderName(prov ? prov.name : data.active_provider);
+        }
+      })
+      .catch(() => {});
+  };
 
   const loadDocuments = () => {
     fetch('/api/v1/rag/documents')
@@ -273,7 +289,9 @@ export default function Home() {
         selectedDomain={selectedDomain}
         onSelectDomain={setSelectedDomain}
         onOpenKnowledge={() => setIsKnowledgeOpen(true)}
+        onOpenAIControl={() => setIsAIControlOpen(true)}
         totalChunks={documents.length}
+        activeProviderName={activeProviderName}
       />
 
       {/* 2. Main Content Viewport */}
@@ -327,6 +345,13 @@ export default function Home() {
         onClose={() => setIsKnowledgeOpen(false)}
         documents={documents}
         onIngestDocument={handleIngestDocument}
+      />
+
+      {/* 5. AI Models & API Keys Enterprise Control Panel */}
+      <AIControlPanel
+        isOpen={isAIControlOpen}
+        onClose={() => setIsAIControlOpen(false)}
+        onActiveProviderChanged={(prov) => setActiveProviderName(prov)}
       />
     </div>
   );

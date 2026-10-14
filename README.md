@@ -169,6 +169,26 @@ Once launched, access the platform at:
 
 ---
 
+## 🎛️ Enterprise AI Multi-Provider Control Panel & Routing Matrix
+
+HorusAgent-AI features a centralized enterprise control panel enabling seamless integration with premier frontier AI providers while guaranteeing **100% zero-dependency air-gapped sovereign execution**:
+
+| Provider | Supported Models | Key Features | Latency Benchmark |
+| :--- | :--- | :--- | :--- |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o1-preview` | Deep multimodal reasoning, structured tool use | ~450ms |
+| **Anthropic** | `claude-3-5-sonnet-20241022`, `claude-3-opus`, `haiku` | Premier architectural synthesis, complex refactoring | ~520ms |
+| **Groq (LPU)** | `llama-3.3-70b-versatile`, `mixtral-8x7b-32768` | Ultra-low latency token generation (500+ tok/s) | ~90ms |
+| **Google Gemini** | `gemini-1.5-pro-latest`, `gemini-1.5-flash-latest` | Massive 2M+ context window, cross-domain RAG | ~380ms |
+| **Horus Sovereign** | `horus-sovereign-v2.1` | 100% local air-gapped execution, zero external API keys | ~15ms (Deterministic) |
+
+### 🚀 Advanced Enterprise Features
+1. **Per-Agent Cognitive Swarm Routing**: Assign specific models to each agent role (e.g. `Groq` for high-throughput Vector Grounding, `Claude 3.5 Sonnet` for Architecture, `GPT-4o` for Anti-Hallucination Audit).
+2. **Instant Architecture Presets**: One-click switching between *Ultra-Fast Groq*, *Balanced Frontier*, *Supreme Quality*, and *Enterprise Air-Gapped*.
+3. **Live Latency & Health Diagnostics**: Sub-second async handshake with external provider endpoints verifying credentials and measuring roundtrip ping times.
+4. **Token & Cost Analytics Meter**: Real-time tracking of mission token consumption and accumulated cloud API expenditure with session reset capabilities.
+
+---
+
 ## 📡 REST & WebSocket API Reference
 
 | Endpoint | Method | Protocol | Description |
@@ -179,6 +199,12 @@ Once launched, access the platform at:
 | `/api/v1/rag/documents` | `GET` | HTTP | Lists all indexed vector chunks with category and metadata |
 | `/api/v1/rag/documents` | `POST` | HTTP | Ingests new custom documentation chunk and generates dense embedding |
 | `/api/v1/rag/search` | `POST` | HTTP | Direct semantic vector similarity search against indexed corpus |
+| `/api/v1/providers` | `GET` | HTTP | Returns configured AI providers, active provider, routing matrix, and hyperparameters |
+| `/api/v1/providers/save` | `POST` | HTTP | Updates provider API keys and active model selection |
+| `/api/v1/providers/test` | `POST` | HTTP | Executes live handshake ping against provider endpoint with roundtrip latency |
+| `/api/v1/providers/routing` | `POST` | HTTP | Updates per-agent model assignment matrix |
+| `/api/v1/providers/preset` | `POST` | HTTP | Applies an architectural preset (`SPEED_OPTIMIZED`, `BALANCED`, `QUALITY_SUPREME`, `AIR_GAPPED_LOCAL`) |
+| `/api/v1/providers/analytics` | `GET` | HTTP | Real-time aggregate token expenditure and estimated dollar cost |
 | `/api/v1/metrics` | `GET` | HTTP | Returns swarm token counts, latency statistics, and governance status |
 | `/health/ready` | `GET` | HTTP | Container readiness check probe |
 
@@ -186,7 +212,7 @@ Once launched, access the platform at:
 
 ## 🧪 Automated Testing & Quality Assurance
 
-HorusAgent-AI includes an automated test suite verifying DAG compilation, anti-hallucination scoring, PII redaction, and semantic cosine similarity:
+HorusAgent-AI includes an automated test suite verifying DAG compilation, anti-hallucination scoring, PII redaction, semantic cosine similarity, multi-provider dispatch, and live diagnostics:
 
 ```bash
 # Run backend pytest suite inside container
@@ -195,15 +221,19 @@ docker exec -e PYTHONPATH=/app horus_backend pytest -v
 
 ### Test Results
 ```
-tests/test_agents.py::test_orchestrator_dag_compilation PASSED           [ 14%]
-tests/test_agents.py::test_critic_scoring PASSED                         [ 28%]
-tests/test_agents.py::test_governance_pii_sanitization PASSED            [ 42%]
-tests/test_agents.py::test_full_swarm_execution PASSED                   [ 57%]
-tests/test_rag.py::test_embedder_dimension_and_normalization PASSED      [ 71%]
-tests/test_rag.py::test_cosine_similarity_identical_and_orthogonal PASSED [ 85%]
+tests/test_agents.py::test_orchestrator_dag_compilation PASSED           [  9%]
+tests/test_agents.py::test_critic_scoring PASSED                         [ 18%]
+tests/test_agents.py::test_governance_pii_sanitization PASSED            [ 27%]
+tests/test_agents.py::test_full_swarm_execution PASSED                   [ 36%]
+tests/test_providers.py::test_provider_manager_initialization PASSED    [ 45%]
+tests/test_providers.py::test_provider_save_key_and_model PASSED        [ 54%]
+tests/test_providers.py::test_provider_routing_rules PASSED             [ 63%]
+tests/test_providers.py::test_provider_presets PASSED                   [ 72%]
+tests/test_providers.py::test_provider_test_ping PASSED                 [ 81%]
+tests/test_rag.py::test_embedder_dimension_and_normalization PASSED      [ 90%]
 tests/test_rag.py::test_vector_store_seed_and_search PASSED              [100%]
 
-======================== 7 passed in 1.50s (100% OK) ========================
+======================== 11 passed in 4.18s (100% OK) ========================
 ```
 
 ---

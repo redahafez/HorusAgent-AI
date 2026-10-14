@@ -1,6 +1,6 @@
 import React from 'react';
 import HorusLogo from './HorusLogo';
-import { ShieldCheck, Cpu, Database, Github, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Cpu, Database, Github, ExternalLink, Key } from 'lucide-react';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -8,7 +8,9 @@ interface HeaderProps {
   selectedDomain: string;
   onSelectDomain: (d: string) => void;
   onOpenKnowledge: () => void;
+  onOpenAIControl: () => void;
   totalChunks: number;
+  activeProviderName?: string;
 }
 
 export default function Header({
@@ -17,7 +19,9 @@ export default function Header({
   selectedDomain,
   onSelectDomain,
   onOpenKnowledge,
+  onOpenAIControl,
   totalChunks,
+  activeProviderName = "SOVEREIGN"
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-horus-border bg-horus-dark/80 backdrop-blur-md px-4 lg:px-8 py-3.5">
@@ -40,6 +44,20 @@ export default function Header({
 
         {/* Right: Controls & Actions */}
         <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+          {/* AI Models & Keys Control Trigger */}
+          <button
+            onClick={onOpenAIControl}
+            className="flex items-center space-x-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-purple-900/40 to-slate-800/80 hover:from-purple-800/50 hover:to-slate-700/80 border border-purple-500/30 text-purple-200 transition shadow-sm hover:shadow-purple-500/10"
+            title="Configure OpenAI, Anthropic, Groq, Gemini & Sovereign Engine"
+          >
+            <Key className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">AI Models & Keys</span>
+            <span className="sm:hidden">AI Models</span>
+            <span className="px-1.5 py-0.2 bg-purple-500/20 text-purple-300 text-[10px] rounded-full font-mono font-bold uppercase tracking-wider">
+              {activeProviderName}
+            </span>
+          </button>
+
           {/* Knowledge RAG Hub Trigger */}
           <button
             onClick={onOpenKnowledge}

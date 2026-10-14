@@ -7,6 +7,7 @@ from .config import settings
 from .api.routes_missions import router as missions_router
 from .api.routes_rag import router as rag_router
 from .api.routes_metrics import router as metrics_router
+from .api.routes_providers import router as providers_router
 from .agents.models import MissionRequest, StreamEvent
 from .agents.engine import swarm_engine
 
@@ -31,6 +32,7 @@ app.add_middleware(
 app.include_router(missions_router, prefix="/api/v1")
 app.include_router(rag_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
+app.include_router(providers_router, prefix="/api/v1")
 
 @app.get("/health/live")
 async def health_live():

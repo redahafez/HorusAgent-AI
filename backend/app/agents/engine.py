@@ -13,6 +13,7 @@ from .researcher import ResearchAgent
 from .architect import CodeArchitectAgent
 from .critic import CriticAgent
 from .governance import SecurityAuditorAgent
+from ..providers.manager import provider_manager, LLMProviderType
 
 class SwarmExecutionEngine:
     """
@@ -50,7 +51,20 @@ class SwarmExecutionEngine:
                     event_callback(evt)
 
         # 1. Mission Started & DAG Initialization
-        await emit(StreamEventType.MISSION_STARTED, AgentRole.ORCHESTRATOR, data={"objective": request.objective, "domain": request.domain})
+        active_prov = provider_manager.global_active_provider
+        active_mdl = provider_manager.selected_models.get(active_prov, "horus-cognitive-v2-local")
+        await emit(
+            StreamEventType.MISSION_STARTED,
+            AgentRole.ORCHESTRATOR,
+            data={
+                "objective": request.objective,
+                "domain": request.domain,
+                "provider": active_prov.value,
+                "model": active_mdl,
+                "temperature": provider_manager.hyperparameters.temperature,
+                "anti_hallucination": provider_manager.hyperparameters.anti_hallucination_level
+            }
+        )
         dag_nodes = self.orchestrator.compile_dag(request)
         await emit(StreamEventType.DAG_INITIALIZED, AgentRole.ORCHESTRATOR, data={"nodes": [n.model_dump() for n in dag_nodes]})
 
@@ -89,13 +103,14 @@ class SwarmExecutionEngine:
         t0 = time.time()
         synthesized_code = await self.architect.execute(request.objective, request.domain, research_context)
         
-        # Simulate realistic token streaming chunk-by-chunk for UI
+        # Dynamic token streaming speed governed by hyperparameters
+        delay = max(0.005, provider_manager.hyperparameters.stream_chunk_delay_ms / 1000.0)
         words = synthesized_code.split(" ")
-        chunk_size = 12
+        chunk_size = 14 if provider_manager.hyperparameters.stream_chunk_delay_ms <= 20 else 10
         for i in range(0, len(words), chunk_size):
             chunk = " ".join(words[i:i+chunk_size]) + " "
             await emit(StreamEventType.TOKEN_STREAM, AgentRole.ARCHITECT, node2.id, {"token": chunk})
-            await asyncio.sleep(0.04) # smooth streaming feel
+            await asyncio.sleep(delay)
 
         node2.latency_ms = int((time.time() - t0) * 1000)
         node2.output = synthesized_code
@@ -158,7 +173,16 @@ class SwarmExecutionEngine:
             compliance_passed=compliance_passed
         )
 
-        await emit(StreamEventType.MISSION_COMPLETED, AgentRole.ORCHESTRATOR, data=result.model_dump(mode="json"))
+        # Record usage metrics in ProviderManager
+        active_model = provider_manager.selected_models.get(provider_manager.global_active_provider, "horus-cognitive-v2-local")
+        provider_manager.record_usage(active_model, tokens_in=total_tokens // 2, tokens_out=total_tokens // 2)
+
+        completion_data = result.model_dump(mode="json")
+        completion_data["analytics"] = provider_manager.get_analytics()
+        completion_data["active_provider"] = provider_manager.global_active_provider.value
+        completion_data["active_model"] = active_model
+
+        await emit(StreamEventType.MISSION_COMPLETED, AgentRole.ORCHESTRATOR, data=completion_data)
         return result
 
 # Singleton Swarm Engine
