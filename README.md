@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/horus-logo.svg" alt="HorusAgent-AI Logo" width="620" />
+<img src="assets/horus-logo.svg" alt="HorusAgent-AI Logo" width="840" />
 
 ### Sovereign Autonomous Multi-Agent Swarm & Real-Time Vector RAG Platform
 **Architected & Developed by [Reda Hafez](https://github.com/redahafez)** • 📬 **[reda.hafez11@gmail.com](mailto:reda.hafez11@gmail.com)**
@@ -22,12 +22,30 @@
 </p>
 
 [Interface Tour](#-visual-showcase--interface-tour) •
+[Sacred Geometry](#-the-cybernetic-eye-of-horus--pharaonic-intelligence) •
 [System Architecture](#-system-architecture) •
 [Swarm Topology](#-autonomous-multi-agent-swarm) •
 [Quickstart](#-quickstart-guide) •
 [API Specs](#-rest--websocket-api-reference)
 
 </div>
+
+---
+
+## 𓂀 The Cybernetic Eye of Horus — Pharaonic Intelligence
+
+<div align="center">
+  <img src="assets/horus-emblem.svg" alt="Cybernetic Eye of Horus Emblem" width="340" />
+</div>
+
+In ancient Egyptian mythology, the **Eye of Horus (Wedjat)** was venerated as the cosmic emblem of protection, healing, and absolute vigilance. Mathematically, its anatomical parts symbolized the first six binary fractions ($\frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \frac{1}{32}, \frac{1}{64}$) — embodying the union of fractional perception into holistic unified wisdom.
+
+**HorusAgent-AI** maps this sacred geometry into modern enterprise cognitive systems:
+- **☀️ The Solar Brow (1/2 - Macro-Perception)**: Intent decomposition and topological DAG planning via the Master Orchestrator.
+- **👁️ The Eyelid Rails (1/4 - Peripheral Vision)**: Dynamic contextual boundary isolation and vector chunk relevance filtering.
+- **⚛️ The Aperture Iris & Quantum Core (1/8 - Pure Thought)**: 128-dimensional dense vector embeddings and sub-millisecond cosine search.
+- **⚡ The Logarithmic Falcon Spiral (1/16 - Memory & Wisdom)**: Recursive self-reflection loops and multi-turn state synthesis.
+- **🏛️ The Descending Data Spine (1/32 & 1/64 - Precision & Governance)**: Anti-hallucination critique, PII masking, and cryptographic SHA-256 seal.
 
 ---
 

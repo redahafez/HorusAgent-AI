@@ -1,87 +1,287 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
   <defs>
-    <!-- Background Glow Gradient -->
-    <radialGradient id="cyberGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.25"/>
-      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    <!-- Background Vignette & Space Void -->
+    <radialGradient id="spaceVoid" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#0c192e" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#070e1b" stop-opacity="0.95"/>
+      <stop offset="80%" stop-color="#030711" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#010308" stop-opacity="1"/>
     </radialGradient>
 
-    <!-- Main Cyan-Sapphire Gradient -->
-    <linearGradient id="neonCyanSapphire" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="50%" stop-color="#0ea5e9"/>
-      <stop offset="100%" stop-color="#6366f1"/>
+    <!-- Royal Pharaonic Solar Gold Gradient -->
+    <linearGradient id="pharaohGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="20%" stop-color="#fef08a"/>
+      <stop offset="45%" stop-color="#f59e0b"/>
+      <stop offset="80%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
     </linearGradient>
 
-    <!-- Horus Solar Gold Gradient -->
-    <linearGradient id="solarGold" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#d97706"/>
-      <stop offset="40%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#fde047"/>
+    <!-- Solar Corona Aura -->
+    <radialGradient id="solarCorona" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#f59e0b" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#d97706" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Electric Cyan Plasma Gradient -->
+    <linearGradient id="electricCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="25%" stop-color="#38bdf8"/>
+      <stop offset="65%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
     </linearGradient>
 
-    <!-- Core Iris Gradient -->
-    <radialGradient id="irisCore" cx="45%" cy="45%" r="60%">
+    <!-- Deep Cyber Azure Metallic -->
+    <linearGradient id="azureMetallic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="40%" stop-color="#0f172a"/>
+      <stop offset="80%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Quantum Singularity Iris Core -->
+    <radialGradient id="quantumCore" cx="42%" cy="40%" r="60%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="30%" stop-color="#38bdf8"/>
+      <stop offset="20%" stop-color="#bae6fd"/>
+      <stop offset="45%" stop-color="#38bdf8"/>
       <stop offset="70%" stop-color="#0284c7"/>
-      <stop offset="100%" stop-color="#0369a1"/>
+      <stop offset="90%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
     </radialGradient>
 
-    <!-- Drop Shadow Filters -->
-    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    <!-- Holographic Spiral Gradient -->
+    <linearGradient id="spiralChroma" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="40%" stop-color="#818cf8"/>
+      <stop offset="75%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <!-- Edge Glow Filters -->
+    <filter id="coreGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1"/>
+      <feGaussianBlur stdDeviation="3" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="goldGlint" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 0.8 0 0 0  0 0 0.3 0 0  0 0 0 2 -0.1" result="goldBoost"/>
+      <feMerge>
+        <feMergeNode in="goldBoost"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="ambientBackdrop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="#0284c7" flood-opacity="0.35"/>
     </filter>
   </defs>
 
-  <!-- Ambient Backdrop Glow -->
-  <circle cx="250" cy="250" r="230" fill="url(#cyberGlow)"/>
+  <!-- 1. Executive Dark Titanium Outer Shield Card -->
+  <g filter="url(#ambientBackdrop)">
+    <!-- Base Rounded Octagonal Chamfer Shield -->
+    <path d="M 120 20 L 480 20 Q 580 20 580 120 L 580 480 Q 580 580 480 580 L 120 580 Q 20 580 20 480 L 20 120 Q 20 20 120 20 Z"
+          fill="url(#spaceVoid)" stroke="url(#electricCyan)" stroke-width="2.5" stroke-opacity="0.6"/>
+    
+    <!-- Inner Concentric Precision Border -->
+    <path d="M 125 32 L 475 32 Q 568 32 568 125 L 568 475 Q 568 568 475 568 L 125 568 Q 32 568 32 475 L 32 125 Q 32 32 125 32 Z"
+          fill="none" stroke="url(#pharaohGold)" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="12 6 2 6"/>
+  </g>
 
-  <!-- Orbital Data Rings (Targeting & Telemetry) -->
-  <circle cx="250" cy="235" r="170" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.4"/>
-  <circle cx="250" cy="235" r="195" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 12" opacity="0.3"/>
+  <!-- 2. Cybernetic Sensor Grid & Sacred Geometry Matrix -->
+  <g opacity="0.18">
+    <!-- Concentric Coordinate Rings -->
+    <circle cx="300" cy="270" r="240" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2 10"/>
+    <circle cx="300" cy="270" r="200" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="8 16"/>
+    <circle cx="300" cy="270" r="160" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="300" cy="270" r="120" fill="none" stroke="#0ea5e9" stroke-width="0.8"/>
 
-  <!-- Upper Brow of Horus (Aerodynamic Neural Shield) -->
-  <path d="M 85 175 Q 230 115 415 160 Q 370 140 240 135 Q 120 145 85 175 Z" 
-        fill="url(#solarGold)" filter="url(#glowFilter)"/>
+    <!-- Cardinal & Diagonal Targeting Axes -->
+    <line x1="300" y1="40" x2="300" y2="500" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 6"/>
+    <line x1="70" y1="270" x2="530" y2="270" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4 6"/>
+    <line x1="130" y1="100" x2="470" y2="440" stroke="#0284c7" stroke-width="0.7" stroke-dasharray="2 6"/>
+    <line x1="470" y1="100" x2="130" y2="440" stroke="#0284c7" stroke-width="0.7" stroke-dasharray="2 6"/>
 
-  <!-- Upper Eyelid Arc -->
-  <path d="M 95 210 Q 240 145 405 215" 
-        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="12" stroke-linecap="round"/>
+    <!-- Circular Radar Dial Ticks (64 Fractions of the Wedjat) -->
+    <g transform="translate(300, 270)">
+      <circle cx="0" cy="0" r="220" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 21.5"/>
+    </g>
+  </g>
 
-  <!-- Lower Eyelid Arc -->
-  <path d="M 95 210 Q 240 310 405 215" 
-        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="8" stroke-linecap="round"/>
+  <!-- 3. Upper Crest: Winged Solar Disk of Ra & Royal Uraeus Conduits -->
+  <g transform="translate(0, 0)">
+    <!-- Solar Aura Bloom -->
+    <circle cx="300" cy="95" r="48" fill="url(#solarCorona)"/>
 
-  <!-- Inner Holographic Sclera Matrix Lines -->
-  <path d="M 140 215 Q 240 270 360 215" 
-        fill="none" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+    <!-- Solar Disk -->
+    <circle cx="300" cy="95" r="24" fill="url(#pharaohGold)" filter="url(#goldGlint)"/>
+    <circle cx="300" cy="95" r="15" fill="#fef08a" opacity="0.8"/>
+    <circle cx="300" cy="95" r="6" fill="#ffffff"/>
 
-  <!-- Pupil / Central AI Quantum Core -->
-  <circle cx="245" cy="225" r="46" fill="url(#irisCore)" filter="url(#glowFilter)"/>
-  <circle cx="245" cy="225" r="22" fill="#090d16" stroke="#38bdf8" stroke-width="2"/>
-  <circle cx="245" cy="225" r="8" fill="#ffffff" filter="url(#glowFilter)"/>
+    <!-- Solar Ray Antennas -->
+    <path d="M 300 65 L 300 45" stroke="url(#pharaohGold)" stroke-width="3" stroke-linecap="round" filter="url(#goldGlint)"/>
+    <path d="M 275 73 L 260 55" stroke="url(#pharaohGold)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 325 73 L 340 55" stroke="url(#pharaohGold)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 255 95 L 235 95" stroke="url(#pharaohGold)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 345 95 L 365 95" stroke="url(#pharaohGold)" stroke-width="2" stroke-linecap="round"/>
 
-  <!-- Inner Reticle Crosshairs -->
-  <line x1="245" y1="165" x2="245" y2="195" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-  <line x1="245" y1="255" x2="245" y2="285" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-  <line x1="185" y1="225" x2="215" y2="225" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-  <line x1="275" y1="225" x2="305" y2="225" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+    <!-- Twin Cyber Uraeus Flanks -->
+    <path d="M 276 95 C 265 85 250 88 245 102 C 240 115 255 125 270 120" 
+          fill="none" stroke="url(#electricCyan)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="245" cy="102" r="3" fill="#38bdf8" filter="url(#coreGlow)"/>
 
-  <!-- The Teardrop Line (Vertical Falcon Plume / Data Bus) -->
-  <path d="M 245 285 L 245 410 Q 245 425 230 425 L 210 425" 
-        fill="none" stroke="url(#solarGold)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 324 95 C 335 85 350 88 355 102 C 360 115 345 125 330 120" 
+          fill="none" stroke="url(#electricCyan)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="355" cy="102" r="3" fill="#38bdf8" filter="url(#coreGlow)"/>
 
-  <!-- The Spiral Falcon Mark (Swirl of Wisdom & RAG Vector Memory) -->
-  <path d="M 175 270 C 145 330 110 380 155 410 C 190 435 220 385 190 355 C 170 335 140 350 150 375" 
-        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="6" stroke-linecap="round"/>
+    <!-- Outstretched Falcon Sky Wings (Upper Symmetrical Silhouettes) -->
+    <path d="M 230 115 C 170 115 110 135 60 175 C 110 160 175 152 235 145 Z" 
+          fill="url(#azureMetallic)" stroke="url(#electricCyan)" stroke-width="1.5" opacity="0.85"/>
+    <path d="M 370 115 C 430 115 490 135 540 175 C 490 160 425 152 365 145 Z" 
+          fill="url(#azureMetallic)" stroke="url(#electricCyan)" stroke-width="1.5" opacity="0.85"/>
 
-  <!-- Neon Node Beacons (Active Agent Sensors) -->
-  <circle cx="85" cy="175" r="5" fill="#f59e0b" filter="url(#glowFilter)"/>
-  <circle cx="415" cy="160" r="5" fill="#38bdf8" filter="url(#glowFilter)"/>
-  <circle cx="95" cy="210" r="6" fill="#0ea5e9" filter="url(#glowFilter)"/>
-  <circle cx="405" cy="215" r="6" fill="#0ea5e9" filter="url(#glowFilter)"/>
-  <circle cx="210" cy="425" r="5" fill="#f59e0b" filter="url(#glowFilter)"/>
+    <!-- Wing Feather Energy Traces -->
+    <path d="M 80 170 Q 150 145 220 140" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 520 170 Q 450 145 380 140" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- 4. The Brow of Horus: Segmented Pharaonic Gold Arch -->
+  <g>
+    <!-- Solid Master Gold Arc -->
+    <path d="M 105 195 C 185 135 415 135 495 195 C 425 170 300 160 180 178 C 145 184 125 189 105 195 Z" 
+          fill="url(#pharaohGold)" filter="url(#goldGlint)"/>
+
+    <!-- Inner Cyber Conduit Groove in the Brow -->
+    <path d="M 130 188 C 200 152 400 152 470 188" 
+          fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 140 187 C 205 154 395 154 460 187" 
+          fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="16 8 32 8" filter="url(#coreGlow)"/>
+
+    <!-- Brow Terminal Gem Nodes -->
+    <circle cx="105" cy="195" r="7" fill="#fbbf24" stroke="#ffffff" stroke-width="1" filter="url(#goldGlint)"/>
+    <circle cx="495" cy="195" r="7" fill="#fbbf24" stroke="#ffffff" stroke-width="1" filter="url(#goldGlint)"/>
+  </g>
+
+  <!-- 5. Eyelid Contours & Inner Cyber Visor Matrix -->
+  <g>
+    <!-- Upper Eyelid Rail (Primary Electric Cyan Beam) -->
+    <path d="M 115 240 Q 300 150 485 240" 
+          fill="none" stroke="url(#electricCyan)" stroke-width="16" stroke-linecap="round" filter="url(#coreGlow)"/>
+
+    <!-- Upper Eyelid Core Specular Neon Stripe -->
+    <path d="M 125 238 Q 300 156 475 238" 
+          fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- Lower Eyelid Rail (Elegant Falcon Parabolic Arc) -->
+    <path d="M 115 240 Q 300 375 485 240" 
+          fill="none" stroke="url(#electricCyan)" stroke-width="11" stroke-linecap="round" filter="url(#coreGlow)"/>
+    
+    <path d="M 130 242 Q 300 366 470 242" 
+          fill="none" stroke="#bae6fd" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+    <!-- Inner Cyber Sclera HUD Arcs -->
+    <path d="M 165 240 Q 300 320 435 240" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+    <path d="M 180 236 Q 300 190 420 236" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+
+    <!-- Corner Canthus Sensor Nodes -->
+    <circle cx="115" cy="240" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="2" filter="url(#coreGlow)"/>
+    <circle cx="115" cy="240" r="4" fill="#ffffff"/>
+    <circle cx="485" cy="240" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="2" filter="url(#coreGlow)"/>
+    <circle cx="485" cy="240" r="4" fill="#ffffff"/>
+  </g>
+
+  <!-- 6. The All-Seeing Iris & Quantum AI Core (Center Nexus) -->
+  <g transform="translate(300, 260)">
+    <!-- Ambient Reactor Pulse Aura -->
+    <circle cx="0" cy="0" r="76" fill="#0284c7" opacity="0.15" filter="url(#coreGlow)"/>
+
+    <!-- Outer Aperture Ring with Gear Teeth -->
+    <circle cx="0" cy="0" r="68" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 8 14 8" filter="url(#coreGlow)"/>
+    <circle cx="0" cy="0" r="62" fill="none" stroke="url(#pharaohGold)" stroke-width="2" opacity="0.8"/>
+
+    <!-- Multi-Blade Camera Aperture Diaphragm -->
+    <g opacity="0.9">
+      <!-- 8 Rotating Titanium Aperture Blades -->
+      <polygon points="0,-58 35,-42 22,-15 -10,-28" fill="#0b172a" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="42,-35 58,0 28,10 15,-22" fill="#08101f" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="58,0 42,35 15,22 28,-10" fill="#0b172a" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="35,42 0,58 -10,28 22,15" fill="#08101f" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="0,58 -35,42 -22,15 10,28" fill="#0b172a" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="-42,35 -58,0 -28,-10 -15,22" fill="#08101f" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="-58,0 -42,-35 -15,-22 -28,10" fill="#0b172a" stroke="#0284c7" stroke-width="1.2"/>
+      <polygon points="-35,-42 0,-58 10,-28 -22,-15" fill="#08101f" stroke="#0284c7" stroke-width="1.2"/>
+    </g>
+
+    <!-- Inner Iris Body -->
+    <circle cx="0" cy="0" r="50" fill="url(#quantumCore)" stroke="url(#pharaohGold)" stroke-width="3"/>
+
+    <!-- Concentric Target Reticles -->
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#fef08a" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.75"/>
+    <circle cx="0" cy="0" r="22" fill="#020617" stroke="#38bdf8" stroke-width="2"/>
+
+    <!-- Cardinal Precision Crosshairs -->
+    <line x1="0" y1="-54" x2="0" y2="-28" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="0" y1="28" x2="0" y2="54" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-54" y1="0" x2="-28" y2="0" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="28" y1="0" x2="54" y2="0" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Subatomic Quantum Singularity Core -->
+    <circle cx="0" cy="0" r="11" fill="#38bdf8" filter="url(#coreGlow)"/>
+    <circle cx="-3" cy="-3" r="4" fill="#ffffff"/>
+  </g>
+
+  <!-- 7. The Teardrop Marking (Vertical Falcon Telemetry Spine) -->
+  <g>
+    <!-- Segmented Golden Data Column (The Fraction 1/8 & 1/64 of Wisdom) -->
+    <path d="M 300 335 L 300 480 Q 300 515 270 515 L 245 515" 
+          fill="none" stroke="url(#pharaohGold)" stroke-width="14" stroke-linecap="round" filter="url(#goldGlint)"/>
+    
+    <!-- Central Cyan Energy Conductor within Column -->
+    <path d="M 300 345 L 300 480 Q 300 505 275 505 L 250 505" 
+          fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" filter="url(#coreGlow)"/>
+
+    <!-- Telemetry Bus Sensor Ticks -->
+    <line x1="290" y1="380" x2="310" y2="380" stroke="#ffffff" stroke-width="2"/>
+    <line x1="290" y1="415" x2="310" y2="415" stroke="#ffffff" stroke-width="2"/>
+    <line x1="290" y1="450" x2="310" y2="450" stroke="#ffffff" stroke-width="2"/>
+
+    <!-- Terminal Energy Node -->
+    <circle cx="245" cy="515" r="9" fill="#fbbf24" stroke="#ffffff" stroke-width="2" filter="url(#goldGlint)"/>
+    <circle cx="245" cy="515" r="4" fill="#ffffff"/>
+  </g>
+
+  <!-- 8. The Logarithmic Spiral of Horus (Falcon Plumage of Vector Memory) -->
+  <g>
+    <!-- Outer Gradient Halo Spiral -->
+    <path d="M 210 325 C 165 400 115 470 180 510 C 235 540 285 475 240 425 C 205 395 165 418 175 455 C 185 480 215 475 218 452" 
+          fill="none" stroke="url(#spiralChroma)" stroke-width="12" stroke-linecap="round" filter="url(#coreGlow)"/>
+
+    <!-- Inner Core Specular Filament -->
+    <path d="M 210 325 C 165 400 115 470 180 510 C 235 540 285 475 240 425 C 205 395 165 418 175 455 C 185 480 215 475 218 452" 
+          fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- Dynamic Vector Constellation Nodes along the Spiral -->
+    <circle cx="165" cy="405" r="4.5" fill="#38bdf8" filter="url(#coreGlow)"/>
+    <circle cx="145" cy="475" r="5" fill="#818cf8" filter="url(#coreGlow)"/>
+    <circle cx="195" cy="520" r="5.5" fill="#c084fc" filter="url(#coreGlow)"/>
+    <circle cx="255" cy="465" r="5" fill="#f43f5e" filter="url(#coreGlow)"/>
+    <circle cx="218" cy="452" r="6" fill="#fef08a" stroke="#ffffff" stroke-width="1.5" filter="url(#goldGlint)"/>
+  </g>
+
+  <!-- 9. Telemetry Readout Watermark Badges -->
+  <g opacity="0.5" font-family="monospace" font-size="9" fill="#38bdf8" letter-spacing="1.5">
+    <text x="45" y="60">SYS::HORUS_CORE_v2.0</text>
+    <text x="45" y="75">STATUS::ALL_SEEING</text>
+    <text x="440" y="60">VECTOR_DIM::128</text>
+    <text x="440" y="75">TOPOLOGY::SWARM</text>
+    <text x="45" y="555">ENCRYPTION::256_AES</text>
+    <text x="420" y="555">COMPLIANCE::FDA_SOC2</text>
+  </g>
 </svg>
