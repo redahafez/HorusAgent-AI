@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: horus_backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - MOCK_LLM_MODE=True
+      - VECTOR_DIMENSION=128
+      - SIMILARITY_THRESHOLD=0.60
+    networks:
+      - horus_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: horus_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+    networks:
+      - horus_network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: horus_gateway
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - horus_network
+
+networks:
+  horus_network:
+    driver: bridge

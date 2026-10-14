@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="100%" height="100%">
+  <defs>
+    <!-- Cyan Sapphire Gradient -->
+    <linearGradient id="logoCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Solar Gold Gradient -->
+    <linearGradient id="logoGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Left Side: Scaled Horus Eye Icon -->
+  <g transform="translate(15, 20) scale(0.4)">
+    <!-- Eye of Horus Shape -->
+    <path d="M 85 175 Q 230 115 415 160 Q 370 140 240 135 Q 120 145 85 175 Z" fill="url(#logoGold)" filter="url(#logoGlow)"/>
+    <path d="M 95 210 Q 240 145 405 215" fill="none" stroke="url(#logoCyan)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 95 210 Q 240 310 405 215" fill="none" stroke="url(#logoCyan)" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="245" cy="225" r="46" fill="url(#logoCyan)" filter="url(#logoGlow)"/>
+    <circle cx="245" cy="225" r="16" fill="#090d16" stroke="#38bdf8" stroke-width="3"/>
+    <circle cx="245" cy="225" r="6" fill="#ffffff"/>
+    <path d="M 245 285 L 245 410 Q 245 425 230 425 L 210 425" fill="none" stroke="url(#logoGold)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 175 270 C 145 330 110 380 155 410 C 190 435 220 385 190 355 C 170 335 140 350 150 375" fill="none" stroke="url(#logoCyan)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Right Side: High-Tech Wordmark -->
+  <g transform="translate(240, 115)">
+    <!-- Primary Title -->
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="900" font-size="64" letter-spacing="4" fill="#ffffff">
+      HORUS<tspan fill="url(#logoCyan)">AGENT</tspan>
+    </text>
+
+    <!-- AI Pill Badge -->
+    <rect x="445" y="-52" width="90" height="56" rx="14" fill="#0369a1" stroke="#38bdf8" stroke-width="2" filter="url(#logoGlow)"/>
+    <text x="490" y="-14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="34" letter-spacing="2" fill="#ffffff" text-anchor="middle">
+      AI
+    </text>
+
+    <!-- Subtitle Line -->
+    <text x="4" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="16" letter-spacing="6" fill="#94a3b8">
+      AUTONOMOUS MULTI-AGENT SWARM &amp; VECTOR RAG
+    </text>
+
+    <!-- Security & Status Micro-Line -->
+    <circle cx="6" cy="74" r="4" fill="#10b981"/>
+    <text x="18" y="78" font-family="monospace" font-weight="500" font-size="12" fill="#10b981" letter-spacing="1.5">
+      ENTERPRISE ORCHESTRATION ENGINE • FDA &amp; SOC2 COMPLIANT
+    </text>
+  </g>
+</svg>

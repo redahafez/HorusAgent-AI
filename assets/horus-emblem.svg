@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Background Glow Gradient -->
+    <radialGradient id="cyberGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Main Cyan-Sapphire Gradient -->
+    <linearGradient id="neonCyanSapphire" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <!-- Horus Solar Gold Gradient -->
+    <linearGradient id="solarGold" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="40%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fde047"/>
+    </linearGradient>
+
+    <!-- Core Iris Gradient -->
+    <radialGradient id="irisCore" cx="45%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#38bdf8"/>
+      <stop offset="70%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </radialGradient>
+
+    <!-- Drop Shadow Filters -->
+    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Backdrop Glow -->
+  <circle cx="250" cy="250" r="230" fill="url(#cyberGlow)"/>
+
+  <!-- Orbital Data Rings (Targeting & Telemetry) -->
+  <circle cx="250" cy="235" r="170" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.4"/>
+  <circle cx="250" cy="235" r="195" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 12" opacity="0.3"/>
+
+  <!-- Upper Brow of Horus (Aerodynamic Neural Shield) -->
+  <path d="M 85 175 Q 230 115 415 160 Q 370 140 240 135 Q 120 145 85 175 Z" 
+        fill="url(#solarGold)" filter="url(#glowFilter)"/>
+
+  <!-- Upper Eyelid Arc -->
+  <path d="M 95 210 Q 240 145 405 215" 
+        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Lower Eyelid Arc -->
+  <path d="M 95 210 Q 240 310 405 215" 
+        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Inner Holographic Sclera Matrix Lines -->
+  <path d="M 140 215 Q 240 270 360 215" 
+        fill="none" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+
+  <!-- Pupil / Central AI Quantum Core -->
+  <circle cx="245" cy="225" r="46" fill="url(#irisCore)" filter="url(#glowFilter)"/>
+  <circle cx="245" cy="225" r="22" fill="#090d16" stroke="#38bdf8" stroke-width="2"/>
+  <circle cx="245" cy="225" r="8" fill="#ffffff" filter="url(#glowFilter)"/>
+
+  <!-- Inner Reticle Crosshairs -->
+  <line x1="245" y1="165" x2="245" y2="195" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+  <line x1="245" y1="255" x2="245" y2="285" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+  <line x1="185" y1="225" x2="215" y2="225" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+  <line x1="275" y1="225" x2="305" y2="225" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- The Teardrop Line (Vertical Falcon Plume / Data Bus) -->
+  <path d="M 245 285 L 245 410 Q 245 425 230 425 L 210 425" 
+        fill="none" stroke="url(#solarGold)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- The Spiral Falcon Mark (Swirl of Wisdom & RAG Vector Memory) -->
+  <path d="M 175 270 C 145 330 110 380 155 410 C 190 435 220 385 190 355 C 170 335 140 350 150 375" 
+        fill="none" stroke="url(#neonCyanSapphire)" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Neon Node Beacons (Active Agent Sensors) -->
+  <circle cx="85" cy="175" r="5" fill="#f59e0b" filter="url(#glowFilter)"/>
+  <circle cx="415" cy="160" r="5" fill="#38bdf8" filter="url(#glowFilter)"/>
+  <circle cx="95" cy="210" r="6" fill="#0ea5e9" filter="url(#glowFilter)"/>
+  <circle cx="405" cy="215" r="6" fill="#0ea5e9" filter="url(#glowFilter)"/>
+  <circle cx="210" cy="425" r="5" fill="#f59e0b" filter="url(#glowFilter)"/>
+</svg>
