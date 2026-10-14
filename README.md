@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/horus-logo.png" alt="HorusAgent-AI Logo" width="840" />
+<img src="assets/HorusAgentsAI.png" alt="HorusAgent-AI Logo" width="340" />
 
 ### Sovereign Autonomous Multi-Agent Swarm & Real-Time Vector RAG Platform
 **Architected & Developed by [Reda Hafez](https://github.com/redahafez)** • 📬 **[reda.hafez11@gmail.com](mailto:reda.hafez11@gmail.com)**
@@ -35,7 +35,7 @@
 ## 𓂀 The Cybernetic Eye of Horus — Pharaonic Intelligence
 
 <div align="center">
-  <img src="assets/horus-emblem.png" alt="Cybernetic Eye of Horus Emblem" width="300" />
+  <img src="assets/horus-emblem.png" alt="Cybernetic Eye of Horus Emblem" width="220" />
 </div>
 
 In ancient Egyptian mythology, the **Eye of Horus (Wedjat)** was venerated as the cosmic emblem of protection, healing, and absolute vigilance. Mathematically, its anatomical parts symbolized the first six binary fractions ($\frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \frac{1}{32}, \frac{1}{64}$) — embodying the union of fractional perception into holistic unified wisdom.
