@@ -35,7 +35,9 @@
 ## 𓂀 The Cybernetic Eye of Horus — Pharaonic Intelligence
 
 <div align="center">
-  <img src="assets/horus-emblem.png" alt="Cybernetic Eye of Horus Emblem" width="220" />
+
+# 𓂀
+
 </div>
 
 In ancient Egyptian mythology, the **Eye of Horus (Wedjat)** was venerated as the cosmic emblem of protection, healing, and absolute vigilance. Mathematically, its anatomical parts symbolized the first six binary fractions ($\frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \frac{1}{32}, \frac{1}{64}$) — embodying the union of fractional perception into holistic unified wisdom.

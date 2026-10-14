@@ -4,12 +4,10 @@ export default function HorusLogo({ className = "h-9 w-auto" }: { className?: st
   return (
     <div className="flex items-center space-x-3.5 cursor-pointer group">
       {/* Eye of Horus Cyber Core Badge */}
-      <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-amber-400/50 shadow-lg shadow-cyan-500/20 group-hover:border-amber-400 group-hover:shadow-cyan-400/40 transition-all duration-300">
-        <img 
-          src="/horus-emblem.png" 
-          alt="Horus Cyber Emblem" 
-          className="w-9 h-9 object-cover rounded-xl shadow-inner" 
-        />
+      <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-amber-400/50 shadow-lg shadow-amber-500/20 group-hover:border-amber-400 group-hover:shadow-amber-400/40 transition-all duration-300">
+        <span className="text-2xl text-transparent bg-clip-text bg-gradient-to-br from-amber-200 via-amber-400 to-amber-500 select-none drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+          𓂀
+        </span>
 
         {/* Live Pulse Beacon */}
         <span className="absolute -top-1 -right-1 flex h-3 w-3">
