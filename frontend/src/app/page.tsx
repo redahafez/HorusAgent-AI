@@ -8,6 +8,9 @@ import MissionLauncher from '@/components/MissionLauncher';
 import StreamTerminal from '@/components/StreamTerminal';
 import KnowledgeExplorer from '@/components/KnowledgeExplorer';
 import AIControlPanel from '@/components/AIControlPanel';
+import CommandCenterHub from '@/components/CommandCenterHub';
+import RAGObservabilityDashboard from '@/components/RAGObservabilityDashboard';
+import { X } from 'lucide-react';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -67,6 +70,8 @@ export default function Home() {
   const [sandboxReport, setSandboxReport] = useState<any>(null);
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
+  const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
+  const [isRAGDashboardOpen, setIsRAGDashboardOpen] = useState(false);
   const [aiControlTab, setAiControlTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>('PROVIDERS');
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
 
@@ -340,6 +345,8 @@ export default function Home() {
           setAiControlTab('OPENROUTER');
           setIsAIControlOpen(true);
         }}
+        onOpenCommandCenter={() => setIsCommandCenterOpen(true)}
+        onOpenRAGDashboard={() => setIsRAGDashboardOpen(true)}
         totalChunks={documents.length}
         activeProviderName={activeProviderName}
       />
@@ -354,7 +361,7 @@ export default function Home() {
           totalChunks={documents.length}
         />
 
-        {/* Dynamic Visual Agent DAG & Autonomous Pipeline (zeriQ) */}
+        {/* Dynamic Visual Agent DAG, zeriQ Pipeline & Orchestra Neon Flow */}
         <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
 
         {/* Mission Launcher & Presets */}
@@ -409,6 +416,52 @@ export default function Home() {
         onClose={() => setIsAIControlOpen(false)}
         onActiveProviderChanged={(prov) => setActiveProviderName(prov)}
       />
+
+      {/* 6. AI Workflow Command Center Modal (AetherOps) */}
+      {isCommandCenterOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setIsCommandCenterOpen(false)}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition z-10"
+              title="Close Command Center"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <CommandCenterHub
+              onClose={() => setIsCommandCenterOpen(false)}
+              onOpenSwarm={() => setIsCommandCenterOpen(false)}
+              onOpenModelRouter={() => {
+                setIsCommandCenterOpen(false);
+                setAiControlTab('OPENROUTER');
+                setIsAIControlOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 7. RAG Observability & Operations Modal */}
+      {isRAGDashboardOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setIsRAGDashboardOpen(false)}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition z-10"
+              title="Close RAG Dashboard"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <RAGObservabilityDashboard
+              onClose={() => setIsRAGDashboardOpen(false)}
+              onOpenKnowledgeManager={() => {
+                setIsRAGDashboardOpen(false);
+                setIsKnowledgeOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,6 +10,8 @@ interface HeaderProps {
   onOpenKnowledge: () => void;
   onOpenAIControl: () => void;
   onOpenRouter: () => void;
+  onOpenCommandCenter?: () => void;
+  onOpenRAGDashboard?: () => void;
   totalChunks: number;
   activeProviderName?: string;
 }
@@ -22,6 +24,8 @@ export default function Header({
   onOpenKnowledge,
   onOpenAIControl,
   onOpenRouter,
+  onOpenCommandCenter,
+  onOpenRAGDashboard,
   totalChunks,
   activeProviderName = "SOVEREIGN"
 }: HeaderProps) {
@@ -45,7 +49,32 @@ export default function Header({
         </div>
 
         {/* Right: Controls & Actions */}
-        <div className="flex items-center space-x-2.5 w-full md:w-auto justify-end">
+        <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-end">
+          {/* AI Workflow Command Center (AetherOps) Trigger */}
+          {onOpenCommandCenter && (
+            <button
+              onClick={onOpenCommandCenter}
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/40 text-indigo-200 transition shadow-sm"
+              title="AetherOps AI Workflow Command Center (Routing Map, Approvals & Cost)"
+            >
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+              <span className="hidden sm:inline">Command Center</span>
+              <span className="sm:hidden">Command</span>
+            </button>
+          )}
+
+          {/* RAG Observability Dashboard Trigger */}
+          {onOpenRAGDashboard && (
+            <button
+              onClick={onOpenRAGDashboard}
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/30 text-purple-300 transition shadow-sm"
+              title="RAG AI Observability, Drift Telemetry & Evaluation Summary"
+            >
+              <Database className="w-3.5 h-3.5 text-purple-400" />
+              <span className="hidden sm:inline">RAG Ops</span>
+            </button>
+          )}
+
           {/* Model Router (OpenRouter) Trigger */}
           <button
             onClick={onOpenRouter}
