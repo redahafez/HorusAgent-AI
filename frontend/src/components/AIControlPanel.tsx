@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Key, Cpu, Zap, Shield, Sparkles, Check, AlertCircle, Eye, EyeOff, 
-  Activity, RefreshCw, Sliders, DollarSign, Layers, ChevronRight, X, Bot, ShieldCheck
+  Activity, RefreshCw, Sliders, DollarSign, Layers, ChevronRight, X, Bot, ShieldCheck,
+  Search, Plus, Edit2, Info, ChevronLeft, ArrowRight, Network
 } from 'lucide-react';
+import OpenRouterHub from './OpenRouterHub';
 
 export interface ProviderItem {
-  provider: 'OPENAI' | 'ANTHROPIC' | 'GROQ' | 'GEMINI' | 'HORUS_SOVEREIGN';
+  provider: 'OPENAI' | 'ANTHROPIC' | 'GROQ' | 'GEMINI' | 'MISTRAL' | 'XAI' | 'PERPLEXITY' | 'HORUS_SOVEREIGN';
   name: string;
   description: string;
   icon: string;
@@ -30,31 +32,51 @@ interface AIControlPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onActiveProviderChanged?: (provider: string, model: string) => void;
+  defaultTab?: 'PROVIDERS' | 'ROUTING' | 'HYPERPARAMS' | 'ANALYTICS' | 'OPENROUTER' | 'MATRIX';
 }
 
-export default function AIControlPanel({ isOpen, onClose, onActiveProviderChanged }: AIControlPanelProps) {
-  const [activeTab, setActiveTab] = useState<'PROVIDERS' | 'ROUTING' | 'HYPERPARAMS' | 'ANALYTICS'>('PROVIDERS');
+export default function AIControlPanel({ 
+  isOpen, 
+  onClose, 
+  onActiveProviderChanged,
+  defaultTab = 'PROVIDERS'
+}: AIControlPanelProps) {
+  const [activeTab, setActiveTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>(
+    defaultTab === 'ROUTING' ? 'OPENROUTER' : defaultTab as any
+  );
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [activeProvider, setActiveProvider] = useState<string>('HORUS_SOVEREIGN');
   const [routingMatrix, setRoutingMatrix] = useState<Record<string, RoutingRule>>({});
   const [analytics, setAnalytics] = useState<any>({});
   
-  // Input fields for keys
+  // Search & Filter for Providers Table (Image 5)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CONNECTED' | 'NOT_CONFIGURED'>('ALL');
+
+  // Provider Edit Modal State
+  const [editingProvider, setEditingProvider] = useState<ProviderItem | null>(null);
   const [inputKeys, setInputKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [selectedModels, setSelectedModels] = useState<Record<string, string>>({});
 
-  // Testing status state per provider
+  // Diagnostics & Status
   const [testingStatus, setTestingStatus] = useState<Record<string, { loading: boolean; success?: boolean; message?: string; latency?: number }>>({});
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  // Hyperparameters
+  // Configure Parameters (Image 3)
   const [temperature, setTemperature] = useState(0.2);
   const [maxTokens, setMaxTokens] = useState(4096);
-  const [antiHallucination, setAntiHallucination] = useState('FDA_STRICT');
-  const [chunkDelay, setChunkDelay] = useState(40);
+  const [stopSequence, setStopSequence] = useState('');
+  const [topP, setTopP] = useState(1.0);
+  const [frequencyPenalty, setFrequencyPenalty] = useState(0.0);
+  const [presencePenalty, setPresencePenalty] = useState(0.0);
+  const [logitBias, setLogitBias] = useState('{}');
 
-  // Fetch initial providers state
+  // Pagination for Providers Table (Image 5)
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch initial state
   const loadState = async () => {
     try {
       const res = await fetch('/api/v1/providers');
@@ -74,8 +96,7 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
         if (data.hyperparameters) {
           setTemperature(data.hyperparameters.temperature ?? 0.2);
           setMaxTokens(data.hyperparameters.max_tokens ?? 4096);
-          setAntiHallucination(data.hyperparameters.anti_hallucination_level ?? 'FDA_STRICT');
-          setChunkDelay(data.hyperparameters.stream_chunk_delay_ms ?? 40);
+          setTopP(data.hyperparameters.top_p ?? 1.0);
         }
       }
     } catch (e) {
@@ -112,6 +133,7 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
       if (res.ok) {
         setSaveStatus(`✓ ${provider} configured successfully!`);
         setTimeout(() => setSaveStatus(null), 3000);
+        setEditingProvider(null);
         loadState();
         if (setAsActive && onActiveProviderChanged) {
           onActiveProviderChanged(provider, model);
@@ -158,29 +180,8 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
     }
   };
 
-  // Handle Apply Preset Profile
-  const handleApplyPreset = async (presetName: string) => {
-    try {
-      setSaveStatus(`Applying preset ${presetName}...`);
-      const res = await fetch('/api/v1/providers/preset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preset_name: presetName })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSaveStatus(`✓ ${data.message}`);
-        setTimeout(() => setSaveStatus(null), 3500);
-        loadState();
-      }
-    } catch (e) {
-      setSaveStatus('Failed to apply preset');
-      setTimeout(() => setSaveStatus(null), 3000);
-    }
-  };
-
-  // Save Hyperparameters
-  const handleSaveHyperparameters = async () => {
+  // Save Hyperparameters (Image 3)
+  const handleSaveParameters = async () => {
     try {
       const res = await fetch('/api/v1/providers/hyperparameters', {
         method: 'POST',
@@ -188,12 +189,15 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
         body: JSON.stringify({
           temperature,
           max_tokens: maxTokens,
-          anti_hallucination_level: antiHallucination,
-          stream_chunk_delay_ms: chunkDelay
+          top_p: topP,
+          frequency_penalty: frequencyPenalty,
+          presence_penalty: presencePenalty,
+          logit_bias: logitBias,
+          stop: stopSequence ? [stopSequence] : []
         })
       });
       if (res.ok) {
-        setSaveStatus('✓ Hyperparameters saved');
+        setSaveStatus('✓ Parameters saved successfully');
         setTimeout(() => setSaveStatus(null), 2500);
       }
     } catch (e) {
@@ -201,30 +205,52 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
     }
   };
 
+  // Filtered providers for Image 5 Table
+  const filteredProviders = providers.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.provider.toLowerCase().includes(searchQuery.toLowerCase());
+    if (statusFilter === 'CONNECTED') return matchesSearch && p.is_configured;
+    if (statusFilter === 'NOT_CONFIGURED') return matchesSearch && !p.is_configured;
+    return matchesSearch;
+  });
+
+  const getEnvKeyName = (p: string) => {
+    switch (p) {
+      case 'OPENAI': return 'OPENAI_API_KEY';
+      case 'ANTHROPIC': return 'ANTHROPIC_API_KEY';
+      case 'GROQ': return 'GROQ_API_KEY';
+      case 'GEMINI': return 'GEMINI_API_KEY';
+      case 'MISTRAL': return 'MISTRAL_API_KEY';
+      case 'XAI': return 'XAI_API_KEY';
+      case 'PERPLEXITY': return 'PERPLEXITY_API_KEY';
+      default: return 'SOVEREIGN_AIRGAP_KEY';
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all animate-fadeIn">
-      <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl shadow-cyan-950/40 overflow-hidden text-slate-100 font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-all animate-fadeIn">
+      <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl shadow-cyan-950/40 overflow-hidden text-slate-100 font-sans">
         
-        {/* Top Gradient Glowing Edge */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-amber-400 to-indigo-500" />
+        {/* Top Glowing Edge */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-400 to-indigo-500" />
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/80 bg-slate-900/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-900/50">
           <div className="flex items-center space-x-3.5">
             <div className="p-2.5 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 text-cyan-400">
-              <Key className="w-5 h-5" />
+              <Network className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-lg font-black tracking-wide text-white">
-                  AI Model Gateway &amp; Provider Keys
+                  Horus Swarm • Model Router &amp; AI Providers
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                <span className="px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
                   Active: {activeProvider}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Configure OpenAI, Anthropic, Groq, Gemini keys, or execute in 100% Sovereign Air-Gapped mode.
+                Unified OpenAI-Compatible Gateway • Fallback Chains • Sovereign Air-Gapped Core
               </p>
             </div>
           </div>
@@ -238,57 +264,70 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
         </div>
 
         {/* Navigation Tabs Bar */}
-        <div className="flex items-center px-6 border-b border-slate-800/80 bg-slate-900/30 text-xs font-semibold space-x-1">
+        <div className="flex items-center px-6 border-b border-slate-800/80 bg-slate-900/30 text-xs font-semibold space-x-1 overflow-x-auto">
           <button
             onClick={() => setActiveTab('PROVIDERS')}
-            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition ${
+            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
               activeTab === 'PROVIDERS'
                 ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Key className="w-3.5 h-3.5" />
-            <span>LLM Providers &amp; Keys</span>
+            <span>AI Providers &amp; Secrets</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('ROUTING')}
-            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition ${
-              activeTab === 'ROUTING'
+            onClick={() => setActiveTab('OPENROUTER')}
+            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
+              activeTab === 'OPENROUTER'
                 ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Swarm Routing Matrix</span>
+            <Network className="w-3.5 h-3.5" />
+            <span>Model Routing (OpenRouter)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           </button>
 
           <button
             onClick={() => setActiveTab('HYPERPARAMS')}
-            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition ${
+            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
               activeTab === 'HYPERPARAMS'
                 ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Presets &amp; Parameters</span>
+            <span>Configure Parameters</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('MATRIX')}
+            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
+              activeTab === 'MATRIX'
+                ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Swarm Matrix</span>
           </button>
 
           <button
             onClick={() => setActiveTab('ANALYTICS')}
-            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition ${
+            className={`flex items-center space-x-2 px-4 py-3 border-b-2 transition whitespace-nowrap ${
               activeTab === 'ANALYTICS'
                 ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span>Token &amp; Cost Meter</span>
+            <span>Cost &amp; Tokens</span>
           </button>
         </div>
 
-        {/* Notification Toast */}
+        {/* Toast Alert */}
         {saveStatus && (
           <div className="px-6 py-2 bg-cyan-500/10 border-b border-cyan-500/20 text-cyan-300 text-xs font-semibold flex items-center justify-between animate-fadeIn">
             <span>{saveStatus}</span>
@@ -298,468 +337,547 @@ export default function AIControlPanel({ isOpen, onClose, onActiveProviderChange
         {/* Modal Body / Tab Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
 
-          {/* TAB 1: PROVIDERS & KEYS */}
+          {/* TAB 1: AI PROVIDERS TABLE & SECRET MANAGER (Matching Image 5) */}
           {activeTab === 'PROVIDERS' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Available Models &amp; Real-Time Diagnostics
-                </span>
-                <span className="text-[11px] text-slate-500 font-mono">
-                  Keys are stored in local sandbox memory • Never leaked
-                </span>
+            <div className="space-y-5 animate-fadeIn">
+              {/* Header & Subtitle */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+                <div>
+                  <h3 className="text-xl font-black text-white">AI Providers</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Set organization-level secrets for AI providers
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const firstUnconfigured = providers.find((p) => !p.is_configured) || providers[0];
+                    setEditingProvider(firstUnconfigured);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-200 text-slate-950 font-bold text-xs shadow-md transition self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add provider</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                {providers.map((p) => {
-                  const isSovereign = p.provider === 'HORUS_SOVEREIGN';
-                  const testInfo = testingStatus[p.provider];
+              {/* Sub-header text */}
+              <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-1">
+                <span className="text-xs font-bold text-white block">Connected AI sources</span>
+                <p className="text-xs text-slate-400">
+                  Link external providers to Horus Swarm and shape how intelligence flows through your work. Mix creativity with computation.
+                </p>
+              </div>
 
-                  return (
-                    <div
-                      key={p.provider}
-                      className={`relative flex flex-col p-5 rounded-2xl border transition-all ${
-                        p.is_active
-                          ? 'bg-gradient-to-br from-slate-900 to-slate-950 border-cyan-500/60 shadow-lg shadow-cyan-950/30'
-                          : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
-                      }`}
-                    >
-                      {/* Provider Title & Active Indicator */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg"
-                            style={{
-                              backgroundColor: `${p.badge_color}20`,
-                              border: `1px solid ${p.badge_color}50`,
-                              color: p.badge_color
-                            }}
-                          >
-                            {p.provider === 'OPENAI' && <Bot className="w-5 h-5" />}
-                            {p.provider === 'ANTHROPIC' && <Cpu className="w-5 h-5" />}
-                            {p.provider === 'GROQ' && <Zap className="w-5 h-5" />}
-                            {p.provider === 'GEMINI' && <Sparkles className="w-5 h-5" />}
-                            {p.provider === 'HORUS_SOVEREIGN' && <ShieldCheck className="w-5 h-5 text-amber-400" />}
-                          </div>
+              {/* Controls bar: Search + Status filter + View */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search providers..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400 transition"
+                  />
+                </div>
 
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-black text-sm text-white">{p.name}</h3>
-                              {p.is_active && (
-                                <span className="px-2 py-0.5 text-[10px] font-black tracking-widest uppercase rounded-full bg-cyan-400 text-slate-950">
-                                  ACTIVE SWARM
-                                </span>
-                              )}
-                              {p.is_configured && !p.is_active && (
-                                <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                                  Configured
-                                </span>
-                              )}
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={statusFilter}
+                    onChange={(e: any) => setStatusFilter(e.target.value)}
+                    className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 outline-none focus:border-cyan-400"
+                  >
+                    <option value="ALL">+ Status (All)</option>
+                    <option value="CONNECTED">Connected</option>
+                    <option value="NOT_CONFIGURED">Not Configured</option>
+                  </select>
+
+                  <button className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white transition">
+                    View
+                  </button>
+                </div>
+              </div>
+
+              {/* Providers Table (Matching Image 5 layout) */}
+              <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900/40">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-900/70 text-[11px] text-slate-400 font-mono">
+                      <th className="py-3 px-4 font-medium">Name ^</th>
+                      <th className="py-3 px-4 font-medium">Models ^</th>
+                      <th className="py-3 px-4 font-medium">Status ^</th>
+                      <th className="py-3 px-4 font-medium">Last updated ^</th>
+                      <th className="py-3 px-4 font-medium text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50">
+                    {filteredProviders.map((p) => {
+                      const envKey = getEnvKeyName(p.provider);
+                      return (
+                        <tr key={p.provider} className="hover:bg-slate-800/30 transition">
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center space-x-3">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
+                                style={{
+                                  backgroundColor: `${p.badge_color}15`,
+                                  color: p.badge_color,
+                                  border: `1px solid ${p.badge_color}30`
+                                }}
+                              >
+                                {p.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-white text-sm">{p.name}</div>
+                                <div className="text-[10px] text-slate-500 font-mono">{envKey}</div>
+                              </div>
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">{p.description}</p>
-                          </div>
-                        </div>
+                          </td>
 
-                        {/* Model Selector & Set Active Button */}
-                        <div className="flex items-center space-x-2">
-                          <select
-                            value={selectedModels[p.provider] || p.selected_model}
-                            onChange={(e) => setSelectedModels({ ...selectedModels, [p.provider]: e.target.value })}
-                            className="text-xs font-mono font-medium rounded-lg bg-slate-800 border border-slate-700 text-slate-200 px-3 py-1.5 focus:outline-none focus:border-cyan-500"
-                          >
-                            {p.available_models.map((m) => (
-                              <option key={m} value={m}>
-                                {m}
-                              </option>
-                            ))}
-                          </select>
+                          <td className="py-3.5 px-4 font-mono text-slate-300">
+                            {p.available_models.length} models
+                          </td>
 
+                          <td className="py-3.5 px-4">
+                            {p.is_configured ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                                Connected
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-500">
+                                Not configured yet
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">
+                            {p.is_configured ? '25/09/2026' : '-'}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => setEditingProvider(p)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                              title={`Configure ${p.name}`}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Table Pagination Bar */}
+                <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-slate-900/60 border-t border-slate-800 text-[11px] text-slate-400 font-mono gap-2">
+                  <span>0 of {filteredProviders.length} row(s) selected.</span>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <span>Rows per page</span>
+                      <select
+                        value={rowsPerPage}
+                        onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                        className="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-xs text-white"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                      </select>
+                    </div>
+
+                    <span>Page 1 of 1</span>
+
+                    <div className="flex items-center space-x-1">
+                      <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-40" disabled>&lt;&lt;</button>
+                      <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-40" disabled>&lt;</button>
+                      <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-40" disabled>&gt;</button>
+                      <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-40" disabled>&gt;&gt;</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Provider Config Drawer / Modal */}
+              {editingProvider && (
+                <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/40 shadow-xl space-y-4 animate-fadeIn">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
+                        style={{
+                          backgroundColor: `${editingProvider.badge_color}20`,
+                          color: editingProvider.badge_color
+                        }}
+                      >
+                        {editingProvider.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-sm">Configure {editingProvider.name}</h4>
+                        <span className="text-[10px] text-slate-500 font-mono">{getEnvKeyName(editingProvider.provider)}</span>
+                      </div>
+                    </div>
+
+                    <button onClick={() => setEditingProvider(null)} className="text-slate-400 hover:text-white">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {editingProvider.provider !== 'HORUS_SOVEREIGN' ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-300 block mb-1">
+                          API Secret Key
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showKeys[editingProvider.provider] ? 'text' : 'password'}
+                            value={inputKeys[editingProvider.provider] ?? (editingProvider.masked_key || '')}
+                            onChange={(e) => setInputKeys(prev => ({ ...prev, [editingProvider.provider]: e.target.value }))}
+                            placeholder={`Enter ${editingProvider.name} key...`}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 pr-10 text-xs text-white font-mono outline-none focus:border-cyan-400"
+                          />
                           <button
-                            onClick={() => handleSaveProvider(p.provider, true)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
-                              p.is_active
-                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 cursor-default'
-                                : 'bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 border border-slate-700'
-                            }`}
+                            type="button"
+                            onClick={() => setShowKeys(prev => ({ ...prev, [editingProvider.provider]: !prev[editingProvider.provider] }))}
+                            className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300"
                           >
-                            {p.is_active ? 'Active' : 'Set Active'}
+                            {showKeys[editingProvider.provider] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
                       </div>
 
-                      {/* API Key Input Section (unless Sovereign) */}
-                      {!isSovereign ? (
-                        <div className="mt-4 pt-4 border-t border-slate-800/60 flex flex-col sm:flex-row items-center gap-3">
-                          <div className="relative flex-1 w-full">
-                            <input
-                              type={showKeys[p.provider] ? 'text' : 'password'}
-                              placeholder={p.masked_key ? `Configured: ${p.masked_key}` : `Enter ${p.name} API Key (sk-...)`}
-                              value={inputKeys[p.provider] !== undefined ? inputKeys[p.provider] : ''}
-                              onChange={(e) => setInputKeys({ ...inputKeys, [p.provider]: e.target.value })}
-                              className="w-full text-xs font-mono rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-500 text-slate-200 pl-3.5 pr-10 py-2 focus:outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowKeys({ ...showKeys, [p.provider]: !showKeys[p.provider] })}
-                              className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition"
-                            >
-                              {showKeys[p.provider] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-
-                          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                            <button
-                              onClick={() => handleSaveProvider(p.provider, false)}
-                              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center space-x-1.5 transition"
-                            >
-                              <Check className="w-3.5 h-3.5 text-cyan-400" />
-                              <span>Save</span>
-                            </button>
-
-                            <button
-                              disabled={testInfo?.loading}
-                              onClick={() => handleTestConnection(p.provider)}
-                              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 hover:from-cyan-950 hover:to-slate-800 border border-slate-700 text-slate-200 flex items-center space-x-1.5 transition"
-                            >
-                              {testInfo?.loading ? (
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
-                              ) : (
-                                <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                              )}
-                              <span>{testInfo?.loading ? 'Pinging...' : 'Test Ping'}</span>
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-amber-300/80 bg-amber-500/5 px-4 py-2.5 rounded-xl border border-amber-500/20">
-                          <div className="flex items-center space-x-2">
-                            <Shield className="w-4 h-4 text-amber-400" />
-                            <span>100% Air-Gapped Local Simulation Engine • Always Ready Without API Keys</span>
-                          </div>
-                          <button
-                            onClick={() => handleTestConnection('HORUS_SOVEREIGN')}
-                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-400/20 border border-amber-400/30 text-amber-300 hover:bg-amber-400/30 transition"
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold text-slate-300 block mb-1">
+                            Default Active Model
+                          </label>
+                          <select
+                            value={selectedModels[editingProvider.provider] || editingProvider.selected_model}
+                            onChange={(e) => setSelectedModels(prev => ({ ...prev, [editingProvider.provider]: e.target.value }))}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-cyan-400"
                           >
-                            Verify Core
+                            {editingProvider.available_models.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold text-slate-300 block mb-1">
+                            Diagnostics Latency Test
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleTestConnection(editingProvider.provider)}
+                            disabled={testingStatus[editingProvider.provider]?.loading}
+                            className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition flex items-center justify-center space-x-1.5"
+                          >
+                            {testingStatus[editingProvider.provider]?.loading ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                            ) : (
+                              <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                            )}
+                            <span>Ping Connection</span>
                           </button>
                         </div>
-                      )}
+                      </div>
 
-                      {/* Test Ping Diagnostic Feedback */}
-                      {testInfo && (
-                        <div className={`mt-3 px-3.5 py-2 rounded-xl text-xs flex items-center justify-between border ${
-                          testInfo.success
+                      {/* Diagnostic Status Box */}
+                      {testingStatus[editingProvider.provider] && (
+                        <div className={`p-3 rounded-xl text-xs font-mono border ${
+                          testingStatus[editingProvider.provider].success
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                             : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                         }`}>
-                          <div className="flex items-center space-x-2">
-                            {testInfo.success ? <Check className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
-                            <span>{testInfo.message}</span>
+                          <div className="font-bold">
+                            {testingStatus[editingProvider.provider].success ? '✓ Operational' : '✕ Diagnostic Warning'}
+                            {testingStatus[editingProvider.provider].latency !== undefined && (
+                              <span className="ml-2 font-normal">({testingStatus[editingProvider.provider].latency}ms)</span>
+                            )}
                           </div>
-                          {testInfo.latency !== undefined && (
-                            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-black/40">
-                              {testInfo.latency}ms
-                            </span>
-                          )}
+                          <div className="text-[11px] mt-0.5">{testingStatus[editingProvider.provider].message}</div>
                         </div>
                       )}
                     </div>
-                  );
-                })}
+                  ) : (
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                      100% Air-Gapped Local Cognitive Swarm. No external secret keys required.
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+                    <button
+                      onClick={() => setEditingProvider(null)}
+                      className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSaveProvider(editingProvider.provider, false)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition"
+                    >
+                      Save Key
+                    </button>
+                    <button
+                      onClick={() => handleSaveProvider(editingProvider.provider, true)}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:opacity-90 text-xs font-bold text-slate-950 transition shadow-md shadow-cyan-500/20"
+                    >
+                      Save &amp; Set as Active
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: MODEL ROUTING (OPENROUTER DASHBOARD - Matching Image 1) */}
+          {activeTab === 'OPENROUTER' && (
+            <OpenRouterHub 
+              onSelectModel={(modelId) => {
+                setSaveStatus(`Selected ${modelId} for swarm execution`);
+                setTimeout(() => setSaveStatus(null), 2500);
+              }}
+            />
+          )}
+
+          {/* TAB 3: CONFIGURE PARAMETERS (Matching Image 3) */}
+          {activeTab === 'HYPERPARAMS' && (
+            <div className="max-w-2xl mx-auto p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-6 animate-fadeIn">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 className="font-black text-lg text-white">Configure parameters</h3>
+                <span className="text-xs font-mono text-slate-400">LLM Inference Tuning</span>
+              </div>
+
+              <div className="space-y-5 text-xs font-sans">
+                {/* Temperature */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Temperature</span>
+                    <span title="Sampling temperature (0 = deterministic)"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className="flex-1 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-mono text-white text-xs"
+                  />
+                </div>
+
+                {/* Max Tokens */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Max Tokens</span>
+                    <span title="Maximum tokens per swarm response"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="range"
+                    min="256"
+                    max="8192"
+                    step="256"
+                    value={maxTokens}
+                    onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                    className="flex-1 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="number"
+                    min="256"
+                    max="8192"
+                    value={maxTokens}
+                    onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-mono text-white text-xs"
+                  />
+                </div>
+
+                {/* Stop Sequences */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Stop</span>
+                    <span title="Stop sequence tokens"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="text"
+                    value={stopSequence}
+                    onChange={(e) => setStopSequence(e.target.value)}
+                    placeholder="Enter stop tokens..."
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-indigo-400"
+                  />
+                </div>
+
+                {/* Top P */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Top P</span>
+                    <span title="Nucleus sampling probability threshold"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={topP}
+                    onChange={(e) => setTopP(parseFloat(e.target.value))}
+                    className="flex-1 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={topP}
+                    onChange={(e) => setTopP(parseFloat(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-mono text-white text-xs"
+                  />
+                </div>
+
+                {/* Frequency Penalty */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Frequency Penalty</span>
+                    <span title="Penalty for repeated token frequency"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={frequencyPenalty}
+                    onChange={(e) => setFrequencyPenalty(parseFloat(e.target.value))}
+                    className="flex-1 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="number"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={frequencyPenalty}
+                    onChange={(e) => setFrequencyPenalty(parseFloat(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-mono text-white text-xs"
+                  />
+                </div>
+
+                {/* Presence Penalty */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Presence Penalty</span>
+                    <span title="Penalty for existing tokens presence"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={presencePenalty}
+                    onChange={(e) => setPresencePenalty(parseFloat(e.target.value))}
+                    className="flex-1 accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="number"
+                    min="-2"
+                    max="2"
+                    step="0.1"
+                    value={presencePenalty}
+                    onChange={(e) => setPresencePenalty(parseFloat(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-center font-mono text-white text-xs"
+                  />
+                </div>
+
+                {/* Logit Bias */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2 w-44">
+                    <span className="text-slate-300 font-medium">Logit Bias</span>
+                    <span title="Modify likelihood of specified tokens (JSON object)"><Info className="w-3.5 h-3.5 text-slate-500" /></span>
+                  </div>
+                  <input
+                    type="text"
+                    value={logitBias}
+                    onChange={(e) => setLogitBias(e.target.value)}
+                    placeholder="{}"
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-indigo-400"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex justify-end">
+                <button
+                  onClick={handleSaveParameters}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition"
+                >
+                  Save Parameters
+                </button>
               </div>
             </div>
           )}
 
-          {/* TAB 2: AGENT ROUTING MATRIX */}
-          {activeTab === 'ROUTING' && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 text-xs text-slate-300 leading-relaxed">
-                <span className="font-bold text-cyan-400">⚡ Autonomous Multi-Model Swarm Routing: </span>
-                Assign different specialized cognitive models to each individual node in the DAG. For example, route the Master Orchestrator through Claude 3.5 Sonnet for deep intent planning, while running the Critic on Groq LPU for instantaneous adversarial audit.
+          {/* TAB 4: SWARM MATRIX */}
+          {activeTab === 'MATRIX' && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div>
+                  <h3 className="font-bold text-sm text-white">Agent Swarm Cognitive Topology</h3>
+                  <p className="text-xs text-slate-400">Map specific models to each agent role in the multi-agent DAG</p>
+                </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(routingMatrix).map(([role, rule]) => (
-                  <div key={role} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-900/60 border border-slate-800 gap-4">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-black text-sm text-white">{role}</span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                          {rule.role}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1">{rule.rationale}</p>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <select
-                        value={rule.provider}
-                        onChange={async (e) => {
-                          const prov = e.target.value;
-                          const defaultMdl = selectedModels[prov] || providers.find(p => p.provider === prov)?.available_models[0] || '';
-                          await fetch('/api/v1/providers/routing', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ role, provider: prov, model: defaultMdl })
-                          });
-                          loadState();
-                        }}
-                        className="text-xs font-semibold rounded-lg bg-slate-800 border border-slate-700 text-slate-200 px-3 py-1.5 focus:outline-none"
-                      >
-                        {providers.map(p => (
-                          <option key={p.provider} value={p.provider}>{p.name}</option>
-                        ))}
-                      </select>
-
-                      <span className="text-xs font-mono text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded-md border border-cyan-800">
-                        {rule.model}
+                  <div key={role} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-cyan-300">{role}</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">
+                        {rule.provider}
                       </span>
                     </div>
+                    <div className="text-xs font-mono text-slate-200 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      Model: {rule.model}
+                    </div>
+                    <p className="text-[11px] text-slate-400">{rule.rationale}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* TAB 3: HYPERPARAMETERS & PRESETS */}
-          {activeTab === 'HYPERPARAMS' && (
-            <div className="space-y-6">
-              {/* Quick Architectural Presets */}
-              <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                  One-Click Architectural Presets
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleApplyPreset('GROQ_LIGHTNING')}
-                    className="flex flex-col p-4 text-left rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 transition group"
-                  >
-                    <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
-                      <Zap className="w-4 h-4" />
-                      <span>Groq Lightning LPU</span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">Sub-150ms token stream. Ideal for high-speed live interactive demonstrations.</p>
-                  </button>
-
-                  <button
-                    onClick={() => handleApplyPreset('DEEP_ARCHITECTURE')}
-                    className="flex flex-col p-4 text-left rounded-2xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800/80 transition group"
-                  >
-                    <div className="flex items-center space-x-2 text-cyan-400 font-bold text-sm">
-                      <Cpu className="w-4 h-4" />
-                      <span>Deep Architecture (Claude 3.5)</span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">High-reasoning code synthesis with temperature 0.1 and strict verification.</p>
-                  </button>
-
-                  <button
-                    onClick={() => handleApplyPreset('SOVEREIGN_AIRGAP')}
-                    className="flex flex-col p-4 text-left rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80 transition group"
-                  >
-                    <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>100% Air-Gapped Sovereign</span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">Zero external calls. Deterministic ALCOA+ compliance with 0$ cloud bill.</p>
-                  </button>
-
-                  <button
-                    onClick={() => handleApplyPreset('COST_OPTIMIZED')}
-                    className="flex flex-col p-4 text-left rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 transition group"
-                  >
-                    <div className="flex items-center space-x-2 text-indigo-400 font-bold text-sm">
-                      <DollarSign className="w-4 h-4" />
-                      <span>Cost-Optimized (GPT-4o-mini)</span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">Ultra-low token burn rate for continuous high-frequency mission execution.</p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Sliders & Hyperparameters */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-5">
-                <div>
-                  <div className="flex justify-between text-xs font-semibold mb-2">
-                    <span className="text-slate-300">Temperature (Creativity vs Determinism)</span>
-                    <span className="font-mono text-cyan-400 font-bold">{temperature}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.0"
-                    max="1.0"
-                    step="0.05"
-                    value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    className="w-full accent-cyan-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                    <span>0.0 (Deterministic / Auditable)</span>
-                    <span>1.0 (Creative Exploratory)</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-semibold mb-2">
-                    <span className="text-slate-300">Max Token Budget</span>
-                    <span className="font-mono text-cyan-400 font-bold">{maxTokens.toLocaleString()} tokens</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1024"
-                    max="16384"
-                    step="1024"
-                    value={maxTokens}
-                    onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                    className="w-full accent-cyan-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                      Anti-Hallucination Strictness
-                    </label>
-                    <select
-                      value={antiHallucination}
-                      onChange={(e) => setAntiHallucination(e.target.value)}
-                      className="w-full text-xs font-semibold rounded-xl bg-slate-950 border border-slate-700 text-slate-200 px-3 py-2"
-                    >
-                      <option value="FDA_STRICT">FDA Mission-Critical (95%+ Confidence)</option>
-                      <option value="STANDARD">Standard Enterprise (80%+ Confidence)</option>
-                      <option value="PERMISSIVE">Permissive (Exploratory / Unchecked)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                      Live Token Stream Chunk Delay
-                    </label>
-                    <select
-                      value={chunkDelay}
-                      onChange={(e) => setChunkDelay(parseInt(e.target.value))}
-                      className="w-full text-xs font-semibold rounded-xl bg-slate-950 border border-slate-700 text-slate-200 px-3 py-2"
-                    >
-                      <option value={15}>Lightning Fast (15ms / chunk)</option>
-                      <option value={40}>Natural Reading (40ms / chunk)</option>
-                      <option value={80}>Auditable Step-by-Step (80ms / chunk)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={handleSaveHyperparameters}
-                    className="px-5 py-2 text-xs font-bold rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition shadow-md shadow-cyan-500/20"
-                  >
-                    Save Parameters
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: LIVE ANALYTICS & COST METER */}
+          {/* TAB 5: ANALYTICS */}
           {activeTab === 'ANALYTICS' && (
-            <div className="space-y-6">
+            <div className="space-y-5 animate-fadeIn">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Total Tokens Processed</span>
-                  <div className="text-2xl font-black text-white mt-1 font-mono">
-                    {(analytics.total_tokens || 14250).toLocaleString()}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[11px] font-mono text-slate-400 block">Total Tokens Consumed</span>
+                  <div className="text-2xl font-black text-white font-mono mt-1">
+                    {analytics.total_tokens?.toLocaleString() || '14,250'}
                   </div>
-                  <span className="text-[10px] text-cyan-400 mt-2 block">128-dim Vector Embedded</span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Cumulative Estimated Cost</span>
-                  <div className="text-2xl font-black text-emerald-400 mt-1 font-mono">
-                    ${(analytics.estimated_cost_usd || 0.0425).toFixed(4)}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[11px] font-mono text-slate-400 block">Estimated Cost (USD)</span>
+                  <div className="text-2xl font-black text-emerald-400 font-mono mt-1">
+                    ${analytics.estimated_cost_usd?.toFixed(4) || '0.0425'}
                   </div>
-                  <span className="text-[10px] text-emerald-500 mt-2 block">Cost optimized routing active</span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Autonomous Missions</span>
-                  <div className="text-2xl font-black text-amber-400 mt-1 font-mono">
-                    {analytics.queries_executed || 12}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[11px] font-mono text-slate-400 block">Queries Executed</span>
+                  <div className="text-2xl font-black text-cyan-400 font-mono mt-1">
+                    {analytics.queries_executed || '12'}
                   </div>
-                  <span className="text-[10px] text-amber-500 mt-2 block">100% Audit Compliance Rate</span>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                  Live Cost &amp; Latency Reference
-                </h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead>
-                      <tr className="border-b border-slate-800 text-slate-400">
-                        <th className="pb-2">Provider</th>
-                        <th className="pb-2">Flagship Model</th>
-                        <th className="pb-2">Input / 1k</th>
-                        <th className="pb-2">Output / 1k</th>
-                        <th className="pb-2">Typical Latency</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                      <tr>
-                        <td className="py-2.5 font-bold text-white">Groq LPU</td>
-                        <td>llama-3.3-70b-versatile</td>
-                        <td className="text-emerald-400">$0.00059</td>
-                        <td className="text-emerald-400">$0.00079</td>
-                        <td className="text-amber-400 font-bold">&lt; 150 ms</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 font-bold text-white">OpenAI</td>
-                        <td>gpt-4o</td>
-                        <td>$0.0025</td>
-                        <td>$0.010</td>
-                        <td>~ 650 ms</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 font-bold text-white">Anthropic</td>
-                        <td>claude-3-5-sonnet</td>
-                        <td>$0.003</td>
-                        <td>$0.015</td>
-                        <td>~ 800 ms</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 font-bold text-white">Google</td>
-                        <td>gemini-1.5-flash</td>
-                        <td className="text-emerald-400">$0.000075</td>
-                        <td className="text-emerald-400">$0.0003</td>
-                        <td>~ 350 ms</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 font-bold text-amber-400">Horus Sovereign</td>
-                        <td>horus-cognitive-local</td>
-                        <td className="text-emerald-400">$0.00 (Free)</td>
-                        <td className="text-emerald-400">$0.00 (Free)</td>
-                        <td className="text-emerald-400 font-bold">Instant (0 ms)</td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
           )}
 
-        </div>
-
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-slate-900/40 text-xs">
-          <div className="flex items-center space-x-2 text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Active Engine: <strong className="text-white">{activeProvider}</strong></span>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition"
-          >
-            Close Dashboard
-          </button>
         </div>
 
       </div>

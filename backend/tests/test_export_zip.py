@@ -61,12 +61,26 @@ def health():
             assert ".env.example" in file_list
             assert "requirements.txt" in file_list
             assert "tests/test_service.py" in file_list
+            assert "sbom.json" in file_list
+            assert "CHECKSUMS.sha256" in file_list
+            assert "checksums.txt.sig" in file_list
+            assert "checksums.txt.pem" in file_list
 
             # Verify runnable test code in ZIP bundle
             test_file_content = zf.read("tests/test_service.py").decode("utf-8")
             assert "test_seal_integrity" in test_file_content
             service_code = zf.read("src/service.py").decode("utf-8")
             assert "ZeroTrustMesh" in service_code
+
+            # Verify CycloneDX SBOM
+            sbom = json.loads(zf.read("sbom.json").decode("utf-8"))
+            assert sbom["bomFormat"] == "CycloneDX"
+            assert len(sbom["components"]) >= 5
+
+            # Verify CHECKSUMS.sha256 manifest
+            checksums = zf.read("CHECKSUMS.sha256").decode("utf-8")
+            assert "src/service.py" in checksums
+            assert "tests/test_service.py" in checksums
 
             # Verify FDA Governance Seal
             seal_data = json.loads(zf.read("docs/FDA_GOVERNANCE_SEAL.json").decode("utf-8"))

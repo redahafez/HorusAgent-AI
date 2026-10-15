@@ -67,6 +67,7 @@ export default function Home() {
   const [sandboxReport, setSandboxReport] = useState<any>(null);
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
+  const [aiControlTab, setAiControlTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>('PROVIDERS');
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
 
   const socketRef = useRef<WebSocket | null>(null);
@@ -331,7 +332,14 @@ export default function Home() {
         selectedDomain={selectedDomain}
         onSelectDomain={setSelectedDomain}
         onOpenKnowledge={() => setIsKnowledgeOpen(true)}
-        onOpenAIControl={() => setIsAIControlOpen(true)}
+        onOpenAIControl={() => {
+          setAiControlTab('PROVIDERS');
+          setIsAIControlOpen(true);
+        }}
+        onOpenRouter={() => {
+          setAiControlTab('OPENROUTER');
+          setIsAIControlOpen(true);
+        }}
         totalChunks={documents.length}
         activeProviderName={activeProviderName}
       />
@@ -346,7 +354,7 @@ export default function Home() {
           totalChunks={documents.length}
         />
 
-        {/* Dynamic Visual Agent DAG */}
+        {/* Dynamic Visual Agent DAG & Autonomous Pipeline (zeriQ) */}
         <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
 
         {/* Mission Launcher & Presets */}
@@ -393,9 +401,11 @@ export default function Home() {
         onDeleteDocument={handleDeleteDocument}
       />
 
-      {/* 5. AI Models & API Keys Enterprise Control Panel */}
+      {/* 5. AI Models & API Keys Enterprise Control Panel & OpenRouter Hub */}
       <AIControlPanel
+        key={`${isAIControlOpen}-${aiControlTab}`}
         isOpen={isAIControlOpen}
+        defaultTab={aiControlTab}
         onClose={() => setIsAIControlOpen(false)}
         onActiveProviderChanged={(prov) => setActiveProviderName(prov)}
       />

@@ -7,7 +7,7 @@ from .config import settings
 from .api.routes_missions import router as missions_router
 from .api.routes_rag import router as rag_router
 from .api.routes_metrics import router as metrics_router
-from .api.routes_providers import router as providers_router
+from .api.routes_providers import router as providers_router, openai_compatible_chat_completions, OpenAIChatCompletionRequest
 from .agents.models import MissionRequest, StreamEvent
 from .agents.engine import swarm_engine
 
@@ -33,6 +33,13 @@ app.include_router(missions_router, prefix="/api/v1")
 app.include_router(rag_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(providers_router, prefix="/api/v1")
+
+@app.post("/api/v1/chat/completions", tags=["OpenAI Compatibility"])
+async def root_chat_completions(req: OpenAIChatCompletionRequest):
+    """
+    Direct OpenAI client compatible endpoint: http://<host>/api/v1/chat/completions
+    """
+    return await openai_compatible_chat_completions(req)
 
 @app.get("/health/live")
 async def health_live():

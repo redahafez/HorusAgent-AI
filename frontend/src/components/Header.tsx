@@ -1,6 +1,6 @@
 import React from 'react';
 import HorusLogo from './HorusLogo';
-import { ShieldCheck, Cpu, Database, Github, ExternalLink, Key } from 'lucide-react';
+import { ShieldCheck, Cpu, Database, Github, ExternalLink, Key, Network } from 'lucide-react';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -9,6 +9,7 @@ interface HeaderProps {
   onSelectDomain: (d: string) => void;
   onOpenKnowledge: () => void;
   onOpenAIControl: () => void;
+  onOpenRouter: () => void;
   totalChunks: number;
   activeProviderName?: string;
 }
@@ -20,6 +21,7 @@ export default function Header({
   onSelectDomain,
   onOpenKnowledge,
   onOpenAIControl,
+  onOpenRouter,
   totalChunks,
   activeProviderName = "SOVEREIGN"
 }: HeaderProps) {
@@ -43,7 +45,18 @@ export default function Header({
         </div>
 
         {/* Right: Controls & Actions */}
-        <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+        <div className="flex items-center space-x-2.5 w-full md:w-auto justify-end">
+          {/* Model Router (OpenRouter) Trigger */}
+          <button
+            onClick={onOpenRouter}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 text-emerald-300 transition shadow-sm"
+            title="OpenRouter Model Comparison & Sequential Fallback Chains"
+          >
+            <Network className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Model Router</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          </button>
+
           {/* AI Models & Keys Control Trigger */}
           <button
             onClick={onOpenAIControl}
@@ -51,8 +64,8 @@ export default function Header({
             title="Configure OpenAI, Anthropic, Groq, Gemini & Sovereign Engine"
           >
             <Key className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">AI Models & Keys</span>
-            <span className="sm:hidden">AI Models</span>
+            <span className="hidden sm:inline">AI Providers</span>
+            <span className="sm:hidden">Providers</span>
             <span className="px-1.5 py-0.2 bg-purple-500/20 text-purple-300 text-[10px] rounded-full font-mono font-bold uppercase tracking-wider">
               {activeProviderName}
             </span>
