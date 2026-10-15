@@ -432,6 +432,10 @@ export default function Home() {
             <CommandCenterHub
               onOpenSwarm={() => setActiveNavTab('WORKFLOWS')}
               onOpenModelRouter={() => setActiveNavTab('ROUTER')}
+              onOpenApprovals={() => setActiveNavTab('APPROVALS')}
+              onOpenAnalytics={() => setActiveNavTab('ANALYTICS')}
+              onOpenStudio={() => setActiveNavTab('STUDIO')}
+              onOpenAdmin={() => setActiveNavTab('ADMIN')}
             />
           )}
 

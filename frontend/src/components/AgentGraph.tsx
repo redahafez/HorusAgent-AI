@@ -5,7 +5,7 @@ import {
   Search, Code2, Scale, ShieldAlert, CheckCircle2, Loader2, Sparkles, 
   GitPullRequest, FileEdit, Shield, Terminal, ArrowRight, User, Check, Play,
   BarChart2, TrendingUp, Copy, Edit3, Globe, Link2, FileText, CheckSquare,
-  Layers, Radio, Settings2, Sliders
+  Layers, Radio, Settings2, Sliders, X
 } from 'lucide-react';
 
 export interface AgentNodeState {
@@ -27,6 +27,7 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
   const [viewMode, setViewMode] = useState<'ORCHESTRA_CIRCUIT' | 'ZERIQ_PIPELINE' | 'DAG'>('ORCHESTRA_CIRCUIT');
   const [copiedDraft, setCopiedDraft] = useState(false);
   const [decisionApproval, setDecisionApproval] = useState<'approved' | 'review'>('approved');
+  const [selectedNodeInspector, setSelectedNodeInspector] = useState<any | null>(null);
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -165,7 +166,22 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
                       <span className="text-[10px] text-emerald-400 font-mono font-semibold">Active</span>
                     </div>
                   </div>
-                  <span className="text-slate-500 cursor-pointer hover:text-slate-300">•••</span>
+                  <button
+                    onClick={() => setSelectedNodeInspector({
+                      name: 'RESEARCH AGENT',
+                      role: 'Vector RAG Grounding',
+                      status: 'Active (87% Scanned)',
+                      temperature: 0.2,
+                      topP: 0.85,
+                      vectorDimension: 128,
+                      citationsCount: 14,
+                      description: 'Dense vector retrieval over sovereign cold-chain enterprise database.'
+                    })}
+                    className="text-slate-500 hover:text-white transition cursor-pointer p-1 rounded hover:bg-slate-800"
+                    title="Inspect Agent Parameters"
+                  >
+                    •••
+                  </button>
                 </div>
 
                 {/* Progress bar */}
@@ -225,7 +241,22 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
                       <span className="text-[10px] text-amber-400 font-mono font-semibold">Processing</span>
                     </div>
                   </div>
-                  <span className="text-slate-500 cursor-pointer hover:text-slate-300">•••</span>
+                  <button
+                    onClick={() => setSelectedNodeInspector({
+                      name: 'ANALYSIS AGENT',
+                      role: 'Data Synthesizer & Trend Forecaster',
+                      status: 'Processing Q4 Metric Stream',
+                      temperature: 0.3,
+                      topP: 0.90,
+                      vectorDimension: 128,
+                      citationsCount: 8,
+                      description: 'Evaluates time-series anomaly variances and calculates predictive regressions.'
+                    })}
+                    className="text-slate-500 hover:text-white transition cursor-pointer p-1 rounded hover:bg-slate-800"
+                    title="Inspect Agent Parameters"
+                  >
+                    •••
+                  </button>
                 </div>
 
                 <div className="text-[10px] font-mono uppercase text-slate-400 font-semibold mb-2">
@@ -288,7 +319,22 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
                       <span className="text-[10px] text-blue-400 font-mono font-semibold">Composing</span>
                     </div>
                   </div>
-                  <span className="text-slate-500 cursor-pointer hover:text-slate-300">•••</span>
+                  <button
+                    onClick={() => setSelectedNodeInspector({
+                      name: 'WRITING AGENT',
+                      role: 'Report Authoring & Executive Synthesis',
+                      status: 'Composing Draft v2.1',
+                      temperature: 0.7,
+                      topP: 0.95,
+                      vectorDimension: 128,
+                      citationsCount: 22,
+                      description: 'Synthesizes multi-source grounding into executive deliverables with 21 CFR seals.'
+                    })}
+                    className="text-slate-500 hover:text-white transition cursor-pointer p-1 rounded hover:bg-slate-800"
+                    title="Inspect Agent Parameters"
+                  >
+                    •••
+                  </button>
                 </div>
 
                 <div className="text-[10px] font-mono uppercase text-slate-400 font-semibold mb-2">
@@ -341,7 +387,22 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
                       <span className="text-[10px] text-orange-400 font-mono font-semibold">Finalizing</span>
                     </div>
                   </div>
-                  <span className="text-slate-500 cursor-pointer hover:text-slate-300">•••</span>
+                  <button
+                    onClick={() => setSelectedNodeInspector({
+                      name: 'DECISION AGENT',
+                      role: 'Cryptographic Gate & ALCOA+ Signer',
+                      status: 'Finalizing Signatures',
+                      temperature: 0.0,
+                      topP: 1.0,
+                      vectorDimension: 128,
+                      citationsCount: 16,
+                      description: 'Validates non-repudiation audit trails and applies HMAC-SHA256 seals.'
+                    })}
+                    className="text-slate-500 hover:text-white transition cursor-pointer p-1 rounded hover:bg-slate-800"
+                    title="Inspect Agent Parameters"
+                  >
+                    •••
+                  </button>
                 </div>
 
                 <div className="text-[10px] font-mono uppercase text-slate-400 font-semibold mb-2">
@@ -608,6 +669,68 @@ export default function AgentGraph({ nodes, activeNodeId }: AgentGraphProps) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Agent Node Inspector Modal */}
+      {selectedNodeInspector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setSelectedNodeInspector(null)}
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 pb-4 border-b border-slate-800 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Settings2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                  <span>{selectedNodeInspector.name}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Online
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">{selectedNodeInspector.role}</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2 mb-4 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Current Status:</span>
+                <span className="font-semibold text-emerald-400">{selectedNodeInspector.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Vector Embeddings:</span>
+                <span className="text-slate-200">{selectedNodeInspector.vectorDimension}-dim HNSW Dense</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Verified Citations:</span>
+                <span className="text-cyan-400">{selectedNodeInspector.citationsCount} Document Chunks</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Temperature / Top-P:</span>
+                <span className="text-indigo-300">{selectedNodeInspector.temperature} / {selectedNodeInspector.topP}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-5 leading-relaxed">
+              {selectedNodeInspector.description}
+            </p>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span className="font-mono text-[10px]">Supervisor: Reda Hafez</span>
+              <button
+                onClick={() => setSelectedNodeInspector(null)}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Database, Search, Layers, Cpu, CheckSquare, ShieldCheck, AlertTriangle,
   TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, RefreshCw,
-  ExternalLink, BarChart3, Network, Activity, Globe, Eye
+  ExternalLink, BarChart3, Network, Activity, Globe, Eye, X, CheckCircle2
 } from 'lucide-react';
 
 interface RAGObservabilityDashboardProps {
@@ -16,6 +16,8 @@ export default function RAGObservabilityDashboard({ onClose, onOpenKnowledgeMana
   const [telemetry, setTelemetry] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('Last 24 Hours');
+  const [isRAGAlertsModalOpen, setIsRAGAlertsModalOpen] = useState(false);
+  const [resolvedAlerts, setResolvedAlerts] = useState<string[]>([]);
 
   useEffect(() => {
     fetchTelemetry();
@@ -392,7 +394,12 @@ export default function RAGObservabilityDashboard({ onClose, onOpenKnowledgeMana
         <div className="lg:col-span-4 p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-white">Recent Alerts</span>
-            <span className="text-[10px] text-slate-400 cursor-pointer">View all alerts &gt;</span>
+            <button
+              onClick={() => setIsRAGAlertsModalOpen(true)}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono hover:underline cursor-pointer"
+            >
+              View all alerts &gt;
+            </button>
           </div>
 
           <div className="space-y-2.5">
@@ -531,6 +538,105 @@ export default function RAGObservabilityDashboard({ onClose, onOpenKnowledgeMana
           </div>
         </div>
       </div>
+
+      {/* RAG Operational Alerts Telemetry Modal */}
+      {isRAGAlertsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setIsRAGAlertsModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 pb-4 border-b border-slate-800 flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                  <span>Vector RAG Operational Alerts</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Dense Index Telemetry
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Real-time ingestion bottlenecks, latency threshold violations, and datasource sync status.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1 text-xs">
+              {[
+                {
+                  id: 'rag-alert-1',
+                  title: 'Retrieval latency is above threshold',
+                  details: 'P99 retrieval latency reached 2.84s across 128-dim dense index. Recommending HNSW efSearch parameter reduction.',
+                  time: '2m ago',
+                  severity: 'CRITICAL'
+                },
+                {
+                  id: 'rag-alert-2',
+                  title: 'Embedding failure rate increased',
+                  details: 'Batch chunking timeout in 2 enterprise PDF documents. 12 chunks re-queued in fallback parser.',
+                  time: '15m ago',
+                  severity: 'WARNING'
+                },
+                {
+                  id: 'rag-alert-3',
+                  title: 'Data source "Confluence" sync delayed',
+                  details: 'OAuth2 token refreshed. Incremental ingestion schedule queued for 47 documents.',
+                  time: '47m ago',
+                  severity: 'INFO'
+                }
+              ].map((alert) => {
+                const isResolved = resolvedAlerts.includes(alert.id);
+                return (
+                  <div
+                    key={alert.id}
+                    className={`p-3.5 rounded-xl border transition ${
+                      isResolved ? 'bg-slate-900/40 border-slate-800 opacity-60' :
+                      alert.severity === 'CRITICAL' ? 'bg-rose-950/20 border-rose-500/30' :
+                      alert.severity === 'WARNING' ? 'bg-amber-950/20 border-amber-500/30' :
+                      'bg-cyan-950/20 border-cyan-500/30'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-1.5">
+                      <div className="font-bold text-white flex items-center space-x-2">
+                        <span>{alert.title}</span>
+                        <span className="text-[9px] font-mono text-slate-500">{alert.time}</span>
+                      </div>
+                      <button
+                        disabled={isResolved}
+                        onClick={() => setResolvedAlerts(prev => [...prev, alert.id])}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex-shrink-0 ${
+                          isResolved
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                        }`}
+                      >
+                        {isResolved ? 'Resolved ✓' : 'Acknowledge'}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-sans">{alert.details}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
+              <span className="font-mono">Super Admin: Reda Hafez</span>
+              <button
+                onClick={() => setIsRAGAlertsModalOpen(false)}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
