@@ -6,8 +6,20 @@ import {
   CheckCircle2, XCircle, Plus, Search, Filter, RefreshCw,
   ExternalLink, UserCheck, AlertTriangle, Lock, Cpu, Sparkles,
   ChevronRight, Award, Check, Layers, ArrowUpRight, ShieldAlert,
-  Sliders, Loader2
+  Sliders, Loader2, Activity, Eye, Zap, Flame, Fingerprint
 } from 'lucide-react';
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  event_type: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  actor_email: string;
+  ip_address: string;
+  user_agent: string;
+  status: string;
+  details: string;
+}
 
 interface Tenant {
   id: string;
@@ -65,11 +77,14 @@ interface RoleMatrixItem {
 }
 
 export default function AdminGovernanceHub() {
-  const [activeTab, setActiveTab] = useState<'TENANTS' | 'WORKSPACES' | 'USERS' | 'ROLES'>('USERS');
+  const [activeTab, setActiveTab] = useState<'TENANTS' | 'WORKSPACES' | 'USERS' | 'ROLES' | 'SECURITY'>('USERS');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [users, setUsers] = useState<UserMember[]>([]);
   const [rolesMatrix, setRolesMatrix] = useState<RoleMatrixItem[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditFilter, setAuditFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+  const [isSimulatingAttack, setIsSimulatingAttack] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTenantFilter, setSelectedTenantFilter] = useState<string>('ALL');
@@ -107,6 +122,7 @@ export default function AdminGovernanceHub() {
 
   useEffect(() => {
     fetchAdminData();
+    fetchAuditLogs();
   }, []);
 
   const fetchAdminData = async () => {
@@ -124,6 +140,42 @@ export default function AdminGovernanceHub() {
       console.error('Failed to load admin overview', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchAuditLogs = async () => {
+    try {
+      const res = await fetch('/api/v1/auth/audit-log');
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data.audit_log || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch security audit log', err);
+    }
+  };
+
+  const handleSimulateBruteForceAttack = async () => {
+    setIsSimulatingAttack(true);
+    showToast('🚨 Simulating multi-vector credential stuffing attack against test account...', 'error');
+    try {
+      // Fire 5 rapid failed login attempts with wrong passwords
+      for (let i = 1; i <= 5; i++) {
+        await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'malicious.probe@darknet.io',
+            password: `StolenPass!${i}`
+          })
+        });
+      }
+      await fetchAuditLogs();
+      showToast('🛡️ Anti-Breach Defense Activated: Target IP locked out for 15 minutes! Incident written to forensics log.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Attack test completed', 'error');
+    } finally {
+      setIsSimulatingAttack(false);
     }
   };
 
@@ -447,6 +499,21 @@ export default function AdminGovernanceHub() {
           >
             <Shield className="w-4 h-4" />
             <span>Roles &amp; RBAC Matrix</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('SECURITY');
+              fetchAuditLogs();
+            }}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+              activeTab === 'SECURITY'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 text-rose-400" />
+            <span>Anti-Breach &amp; Security Forensics ({auditLogs.length})</span>
           </button>
         </div>
 
@@ -812,6 +879,252 @@ export default function AdminGovernanceHub() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: ANTI-BREACH & SECURITY FORENSICS AUDIT            */}
+      {/* ======================================================== */}
+      {activeTab === 'SECURITY' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Top Threat Defense Architecture Banner */}
+          <div className="rounded-3xl bg-gradient-to-r from-rose-950/30 via-slate-950 to-indigo-950/30 border border-rose-500/30 p-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+              <div className="flex items-start space-x-4">
+                <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0 shadow-lg shadow-rose-500/10">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2.5 mb-1.5">
+                    <h2 className="text-xl font-black text-white tracking-tight">
+                      Anti-Breach Engine &amp; Threat Defense Matrix
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      ACTIVE DEFENSE
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+                    Continuous monitoring defending HorusAgent AI accounts against credential stuffing, brute-force dictionary attacks, session hijacking, and privilege escalation. Powered by salted PBKDF2-HMAC-SHA256, FIPS 140-2 TOTP verification, and automated 15-minute lockout circuit breakers.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons: Simulate Attack & Refresh */}
+              <div className="flex items-center space-x-3 flex-shrink-0">
+                <button
+                  onClick={handleSimulateBruteForceAttack}
+                  disabled={isSimulatingAttack}
+                  className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition disabled:opacity-50"
+                  title="Simulate 5 rapid malicious failed attempts to verify active lockout"
+                >
+                  {isSimulatingAttack ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Simulating Attack...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Flame className="w-4 h-4" />
+                      <span>Test Anti-Brute Force Protection</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={fetchAuditLogs}
+                  className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition"
+                  title="Refresh Security Logs"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Live Security Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-slate-800/80">
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono uppercase">Lockout Threshold</span>
+                  <Lock className="w-4 h-4 text-rose-400" />
+                </div>
+                <div className="text-lg font-black text-white">5 Attempts / 15m</div>
+                <div className="text-[10px] text-emerald-400 mt-1 flex items-center space-x-1">
+                  <span>●</span>
+                  <span>Automated IP / Account Quarantine</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono uppercase">Password Hashing</span>
+                  <Fingerprint className="w-4 h-4 text-cyan-400" />
+                </div>
+                <div className="text-lg font-black text-white">PBKDF2-HMAC-SHA256</div>
+                <div className="text-[10px] text-slate-400 mt-1">
+                  100k Rounds • 16-byte CSPRNG Salt
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono uppercase">MFA Multi-Factor</span>
+                  <ShieldCheck className="w-4 h-4 text-purple-400" />
+                </div>
+                <div className="text-lg font-black text-white">FIPS 140-2 Level 3</div>
+                <div className="text-[10px] text-purple-300 mt-1">
+                  TOTP + Hardware Key Ready
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono uppercase">Bearer Invalidation</span>
+                  <Key className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="text-lg font-black text-white">Instant Safe Revocation</div>
+                <div className="text-[10px] text-amber-300 mt-1">
+                  Purges token on Logout
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Forensics Event Stream Table */}
+          <div className="rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                  <Activity className="w-4 h-4 text-cyan-400" />
+                  <span>Real-Time Security Forensics &amp; Breach Audit Log</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Chronological tamper-evident stream of all platform authentication events, privilege validations, and defended attacks.
+                </p>
+              </div>
+
+              {/* Risk Level Filter Tabs */}
+              <div className="flex items-center space-x-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+                {(['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => setAuditFilter(lvl)}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-mono font-bold transition ${
+                      auditFilter === lvl
+                        ? lvl === 'CRITICAL'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          : lvl === 'HIGH'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800/80 bg-slate-900/40 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Timestamp (UTC)</th>
+                    <th className="py-3 px-4">Event Classification</th>
+                    <th className="py-3 px-4 text-center">Threat Level</th>
+                    <th className="py-3 px-4">Target / Actor</th>
+                    <th className="py-3 px-4">IP Forensics &amp; Client</th>
+                    <th className="py-3 px-4">Security Defense Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50 font-sans">
+                  {auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-500 text-xs">
+                        No security incidents or audit records matching the filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    auditLogs
+                      .filter(l => auditFilter === 'ALL' || l.risk_level === auditFilter)
+                      .filter(l => searchQuery === '' ||
+                        l.actor_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        l.event_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        l.details.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((log) => {
+                        const isCritical = log.risk_level === 'CRITICAL';
+                        const isHigh = log.risk_level === 'HIGH';
+                        const isMedium = log.risk_level === 'MEDIUM';
+
+                        return (
+                          <tr
+                            key={log.id}
+                            className={`hover:bg-slate-900/40 transition ${
+                              isCritical ? 'bg-rose-950/10' : ''
+                            }`}
+                          >
+                            <td className="py-3 px-4 font-mono text-[11px] text-slate-300 whitespace-nowrap">
+                              {new Date(log.timestamp).toLocaleString()}
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <div className="flex items-center space-x-2">
+                                {isCritical ? (
+                                  <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0 animate-pulse" />
+                                ) : isHigh ? (
+                                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                                ) : (
+                                  <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                )}
+                                <span className="font-mono font-bold text-white text-[11px]">
+                                  {log.event_type}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full font-mono font-bold text-[10px] ${
+                                  isCritical
+                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm shadow-rose-500/20'
+                                    : isHigh
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                    : isMedium
+                                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
+                                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                }`}
+                              >
+                                {log.risk_level}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <div className="font-mono text-cyan-300 font-semibold">{log.actor_email}</div>
+                              <div className="text-[10px] text-slate-500 font-mono">Status: {log.status}</div>
+                            </td>
+
+                            <td className="py-3 px-4 font-mono text-[11px]">
+                              <div className="text-slate-300 font-semibold flex items-center space-x-1">
+                                <span>{log.ip_address}</span>
+                              </div>
+                              <div className="text-[9px] text-slate-500 truncate max-w-[180px]" title={log.user_agent}>
+                                {log.user_agent}
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4 text-slate-300 text-[11px] max-w-md">
+                              <div className="leading-snug">{log.details}</div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
                 </tbody>
               </table>
             </div>

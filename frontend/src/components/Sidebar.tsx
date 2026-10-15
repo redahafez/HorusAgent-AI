@@ -4,7 +4,7 @@ import React from 'react';
 import {
   LayoutDashboard, GitBranch, Users, BarChart2, ShieldCheck,
   Network, Settings, Smartphone, ExternalLink, ChevronRight, Check, X,
-  Building2
+  Building2, LogOut, Lock, ShieldAlert
 } from 'lucide-react';
 
 export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'ADMIN' | 'SETTINGS';
@@ -16,6 +16,9 @@ interface SidebarProps {
   activeProviderName?: string;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  currentUser?: any;
+  onOpenLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export default function Sidebar({
@@ -24,7 +27,10 @@ export default function Sidebar({
   approvalCount = 3,
   activeProviderName = 'SOVEREIGN',
   isOpenMobile = false,
-  onCloseMobile
+  onCloseMobile,
+  currentUser,
+  onOpenLogin,
+  onLogout
 }: SidebarProps) {
   const navItems = [
     {
@@ -149,8 +155,43 @@ export default function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom Cards: Platform status & ModelOps Mobile */}
+      {/* Bottom Cards: User Account & Platform status */}
       <div className="space-y-3 pt-4 border-t border-slate-900">
+        {/* Active Account Identity Card */}
+        {currentUser ? (
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950/30 border border-slate-800 flex items-center justify-between shadow-inner">
+            <div className="flex items-center space-x-2.5 truncate">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-sm">
+                {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
+              </div>
+              <div className="truncate text-left">
+                <div className="text-xs font-bold text-white truncate flex items-center space-x-1">
+                  <span className="truncate">{currentUser.name}</span>
+                  {currentUser.is_super_admin && (
+                    <span className="text-[8px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black font-mono">ROOT</span>
+                  )}
+                </div>
+                <div className="text-[9px] text-cyan-400 truncate font-mono">{currentUser.role_title || currentUser.role}</div>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Secure Logout / Invalidate Bearer Token"
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 transition flex-shrink-0 ml-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onOpenLogin}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 hover:from-cyan-500/30 hover:to-indigo-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Sign In to Swarm</span>
+          </button>
+        )}
+
         {/* Platform Status Card */}
         <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 text-xs">
           <div className="flex items-center space-x-1.5 mb-1 text-slate-300 font-semibold">

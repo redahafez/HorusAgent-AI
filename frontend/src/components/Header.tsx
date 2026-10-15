@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Bell, ChevronDown, ArrowRight, Menu, ShieldCheck,
   CheckCircle2, AlertTriangle, AlertCircle, Sparkles, Terminal,
-  LayoutDashboard, Database, Key, ExternalLink, Github, Building2, Award
+  LayoutDashboard, Database, Key, ExternalLink, Github, Building2, Award,
+  LogOut, Lock, User
 } from 'lucide-react';
 import { NavTabType } from './Sidebar';
 
@@ -19,6 +20,9 @@ interface HeaderProps {
   totalChunks: number;
   activeProviderName?: string;
   onOpenSearchPalette?: () => void;
+  currentUser?: any;
+  onOpenLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export default function Header({
@@ -31,7 +35,10 @@ export default function Header({
   onOpenAIControl,
   totalChunks,
   activeProviderName = 'SOVEREIGN',
-  onOpenSearchPalette
+  onOpenSearchPalette,
+  currentUser,
+  onOpenLogin,
+  onLogout
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -169,110 +176,150 @@ export default function Header({
             )}
           </div>
 
-          {/* User Profile Pill - Super Admin Reda Hafez */}
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10"
-            >
-              {/* Profile Avatar */}
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-sm shadow-cyan-500/30">
-                <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center text-[11px] font-bold text-cyan-300">
-                  RH
+          {/* User Profile Pill & Auth Actions */}
+          {currentUser ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10"
+              >
+                {/* Profile Avatar */}
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-sm shadow-cyan-500/30">
+                  <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center text-[11px] font-bold text-cyan-300">
+                    {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
+                  </div>
                 </div>
-              </div>
-              <div className="hidden md:block">
-                <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
-                  <span>Reda Hafez</span>
-                  <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">Admin</span>
+                <div className="hidden md:block">
+                  <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
+                    <span>{currentUser.name}</span>
+                    <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+                      {currentUser.is_super_admin ? 'ROOT' : currentUser.role?.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-cyan-400 font-mono leading-tight">
+                    {currentUser.role_title || 'Authenticated Session'}
+                  </div>
                 </div>
-                <div className="text-[9px] text-cyan-400 font-mono leading-tight">
-                  Chief Architect
-                </div>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
-            </button>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+              </button>
 
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
-                <div className="flex items-center space-x-3 pb-3 border-b border-slate-800 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md">
-                    <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-bold text-xs text-cyan-300">
-                      RH
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-76 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
+                  <div className="flex items-center space-x-3 pb-3 border-b border-slate-800 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md">
+                      <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-bold text-xs text-cyan-300">
+                        {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
+                      </div>
+                    </div>
+                    <div className="truncate">
+                      <div className="font-bold text-white flex items-center space-x-1.5 truncate">
+                        <span className="truncate">{currentUser.name}</span>
+                        {currentUser.is_super_admin && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-400 text-slate-950">
+                            ROOT
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-cyan-400 font-mono truncate">{currentUser.email}</div>
                     </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-white flex items-center space-x-1.5">
-                      <span>Reda Hafez</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-400 text-slate-950">
-                        ROOT
+
+                  <div className="space-y-1 mb-3 text-[11px]">
+                    <div className="flex items-center justify-between text-slate-400 py-0.5">
+                      <span>Role:</span>
+                      <span className="text-amber-300 font-mono font-bold">{currentUser.role_title || currentUser.role}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400 py-0.5">
+                      <span>Scope:</span>
+                      <span className="text-cyan-400 font-mono">{currentUser.is_super_admin ? 'Universal Root (*:*)' : 'Tenant Scoped'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400 py-0.5">
+                      <span>MFA Status:</span>
+                      <span className="text-emerald-400 font-mono">{currentUser.mfa_enabled ? 'FIPS 140-2 Key Verified' : 'Standard Auth'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400 py-0.5">
+                      <span>AI Engine:</span>
+                      <span className="text-slate-200 font-mono font-semibold uppercase">{activeProviderName}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-900 space-y-1.5">
+                    <button
+                      onClick={() => {
+                        onSelectTab('ADMIN');
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition flex items-center justify-between font-semibold"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Orgs, Users &amp; RBAC</span>
                       </span>
+                      <span className="text-[10px]">➔</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        onOpenAIControl();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center space-x-2"
+                    >
+                      <Key className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Manage API Keys</span>
+                    </button>
+
+                    {/* Switch / Sign In Persona */}
+                    <button
+                      onClick={() => {
+                        if (onOpenLogin) onOpenLogin();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-indigo-300 hover:text-indigo-200 transition flex items-center space-x-2"
+                    >
+                      <User className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Switch Account / Persona</span>
+                    </button>
+
+                    <a
+                      href="https://github.com/redahafez/HorusAgent-AI"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center justify-between"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <Github className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Documentation</span>
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-slate-500" />
+                    </a>
+
+                    {/* Sign Out / Token Invalidation */}
+                    <div className="pt-1.5 border-t border-slate-900">
+                      <button
+                        onClick={() => {
+                          if (onLogout) onLogout();
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition flex items-center space-x-2 font-semibold"
+                      >
+                        <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Sign Out (Safe Logout)</span>
+                      </button>
                     </div>
-                    <div className="text-[10px] text-cyan-400 font-mono">reda.hafez@horusagent.ai</div>
                   </div>
                 </div>
-
-                <div className="space-y-1 mb-3 text-[11px]">
-                  <div className="flex items-center justify-between text-slate-400 py-0.5">
-                    <span>Role:</span>
-                    <span className="text-amber-300 font-mono font-bold">Platform Super Admin</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-400 py-0.5">
-                    <span>Scope:</span>
-                    <span className="text-cyan-400 font-mono">Universal Root (*:*)</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-400 py-0.5">
-                    <span>MFA:</span>
-                    <span className="text-emerald-400 font-mono">FIPS 140-2 Key Verified</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-400 py-0.5">
-                    <span>Active Provider:</span>
-                    <span className="text-slate-200 font-mono font-semibold uppercase">{activeProviderName}</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-900 space-y-1.5">
-                  <button
-                    onClick={() => {
-                      onSelectTab('ADMIN');
-                      setShowProfileMenu(false);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition flex items-center justify-between font-semibold"
-                  >
-                    <span className="flex items-center space-x-2">
-                      <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Orgs, Users &amp; RBAC</span>
-                    </span>
-                    <span className="text-[10px]">➔</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      onOpenAIControl();
-                      setShowProfileMenu(false);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center space-x-2"
-                  >
-                    <Key className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Manage API Keys</span>
-                  </button>
-
-                  <a
-                    href="https://github.com/redahafez/HorusAgent-AI"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center justify-between"
-                  >
-                    <span className="flex items-center space-x-2">
-                      <Github className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Documentation</span>
-                    </span>
-                    <ExternalLink className="w-3 h-3 text-slate-500" />
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="flex items-center space-x-2 px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition shadow-sm"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
 
           {/* High-Visibility CTA Button: Open Console ➔ or Overview ➔ */}
           {activeTab !== 'WORKFLOWS' ? (

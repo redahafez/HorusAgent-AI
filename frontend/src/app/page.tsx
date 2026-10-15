@@ -15,6 +15,7 @@ import RAGObservabilityDashboard from '@/components/RAGObservabilityDashboard';
 import OpenRouterHub from '@/components/OpenRouterHub';
 import ApprovalsHub from '@/components/ApprovalsHub';
 import AdminGovernanceHub from '@/components/AdminGovernanceHub';
+import AuthModal from '@/components/AuthModal';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -82,6 +83,58 @@ export default function Home() {
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
   const [aiControlTab, setAiControlTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>('PROVIDERS');
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
+
+  // User Authentication & Anti-Breach State
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('horus_user');
+      if (savedUser) {
+        try {
+          return JSON.parse(savedUser);
+        } catch {}
+      }
+    }
+    return {
+      id: "usr-reda-hafez",
+      name: "Reda Hafez",
+      email: "reda.hafez@horusagent.ai",
+      avatar: "RH",
+      role: "SUPER_ADMIN",
+      role_title: "Platform Super Admin & Chief Architect",
+      is_super_admin: true,
+      mfa_enabled: true,
+      tenant_name: "Horus Core Systems",
+    };
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('horus_token') : null;
+    try {
+      await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+    } catch {}
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('horus_token');
+      localStorage.removeItem('horus_user');
+    }
+    setCurrentUser(null);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleLoginSuccess = (user: any, token: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('horus_token', token);
+      localStorage.setItem('horus_user', JSON.stringify(user));
+    }
+    setCurrentUser(user);
+    setIsAuthModalOpen(false);
+  };
 
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -342,6 +395,9 @@ export default function Home() {
         activeProviderName={activeProviderName}
         isOpenMobile={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
+        currentUser={currentUser}
+        onOpenLogin={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* 2. Main Content Viewport */}
@@ -361,6 +417,9 @@ export default function Home() {
           totalChunks={documents.length}
           activeProviderName={activeProviderName}
           onOpenSearchPalette={() => setIsCommandPaletteOpen(true)}
+          currentUser={currentUser}
+          onOpenLogin={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
         />
 
         {/* Viewport Content */}
@@ -495,6 +554,13 @@ export default function Home() {
         defaultTab={aiControlTab}
         onClose={() => setIsAIControlOpen(false)}
         onActiveProviderChanged={(prov) => setActiveProviderName(prov)}
+      />
+
+      {/* Enterprise Authentication & Anti-Breach Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
