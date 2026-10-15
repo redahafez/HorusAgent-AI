@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Sidebar, { NavTabType } from '@/components/Sidebar';
 import Header from '@/components/Header';
+import CommandPalette from '@/components/CommandPalette';
 import TelemetryStats from '@/components/TelemetryStats';
 import AgentGraph, { AgentNodeState } from '@/components/AgentGraph';
 import MissionLauncher from '@/components/MissionLauncher';
@@ -10,7 +12,8 @@ import KnowledgeExplorer from '@/components/KnowledgeExplorer';
 import AIControlPanel from '@/components/AIControlPanel';
 import CommandCenterHub from '@/components/CommandCenterHub';
 import RAGObservabilityDashboard from '@/components/RAGObservabilityDashboard';
-import { X } from 'lucide-react';
+import OpenRouterHub from '@/components/OpenRouterHub';
+import ApprovalsHub from '@/components/ApprovalsHub';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -52,6 +55,10 @@ const INITIAL_NODES: AgentNodeState[] = [
 ];
 
 export default function Home() {
+  const [activeNavTab, setActiveNavTab] = useState<NavTabType>('OVERVIEW');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState('CLOUD_ARCH');
@@ -68,10 +75,10 @@ export default function Home() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [executionTrace, setExecutionTrace] = useState<any[]>([]);
   const [sandboxReport, setSandboxReport] = useState<any>(null);
+
+  // Modals & Panels
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
-  const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
-  const [isRAGDashboardOpen, setIsRAGDashboardOpen] = useState(false);
   const [aiControlTab, setAiControlTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>('PROVIDERS');
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
 
@@ -85,7 +92,6 @@ export default function Home() {
         if (Array.isArray(data)) setPresets(data);
       })
       .catch(() => {
-        // Fallback default presets if backend is still spinning up
         setPresets([
           {
             id: "preset-cloud",
@@ -146,7 +152,6 @@ export default function Home() {
 
       ws.onclose = () => {
         setIsConnected(false);
-        // Attempt reconnection after 3 seconds
         setTimeout(initWebSocket, 3000);
       };
 
@@ -236,7 +241,6 @@ export default function Home() {
     setSandboxReport(null);
     setNodes((prev) => prev.map((n) => ({ ...n, state: 'IDLE', latencyMs: 0 })));
 
-    // Send via WebSocket if connected
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(
         JSON.stringify({
@@ -247,7 +251,6 @@ export default function Home() {
         })
       );
     } else {
-      // Fallback via HTTP REST execution endpoint
       try {
         const res = await fetch('/api/v1/missions/execute', {
           method: 'POST',
@@ -329,76 +332,147 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* 1. Header */}
-      <Header
-        isConnected={isConnected}
-        isStreaming={isStreaming}
-        selectedDomain={selectedDomain}
-        onSelectDomain={setSelectedDomain}
+    <div className="flex h-screen overflow-hidden bg-horus-dark text-slate-100 cyber-grid-bg">
+      {/* 1. Left Enterprise Navigation Sidebar */}
+      <Sidebar
+        activeTab={activeNavTab}
+        onSelectTab={setActiveNavTab}
+        approvalCount={3}
+        activeProviderName={activeProviderName}
+        isOpenMobile={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
+
+      {/* 2. Main Content Viewport */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* Top Header Search & Profile Bar */}
+        <Header
+          isConnected={isConnected}
+          isStreaming={isStreaming}
+          activeTab={activeNavTab}
+          onSelectTab={setActiveNavTab}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
+          onOpenKnowledge={() => setIsKnowledgeOpen(true)}
+          onOpenAIControl={() => {
+            setAiControlTab('PROVIDERS');
+            setIsAIControlOpen(true);
+          }}
+          totalChunks={documents.length}
+          activeProviderName={activeProviderName}
+          onOpenSearchPalette={() => setIsCommandPaletteOpen(true)}
+        />
+
+        {/* Viewport Content */}
+        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+          {/* TAB 1: OVERVIEW (AI Workflow Command Center - AetherOps) */}
+          {activeNavTab === 'OVERVIEW' && (
+            <CommandCenterHub
+              onOpenSwarm={() => setActiveNavTab('WORKFLOWS')}
+              onOpenModelRouter={() => setActiveNavTab('ROUTER')}
+            />
+          )}
+
+          {/* TAB 2: WORKFLOWS (Multi-Agent Autonomous Swarm & Mission Console) */}
+          {activeNavTab === 'WORKFLOWS' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Telemetry KPI Metrics */}
+              <TelemetryStats
+                totalTokens={totalTokens}
+                latencyMs={latencyMs}
+                verificationScore={verificationScore}
+                totalChunks={documents.length}
+              />
+
+              {/* Dynamic Visual Agent DAG, zeriQ Pipeline & Orchestra Neon Flow */}
+              <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
+
+              {/* Mission Launcher & Presets */}
+              <MissionLauncher
+                presets={presets}
+                selectedDomain={selectedDomain}
+                onSelectDomain={setSelectedDomain}
+                onLaunchMission={handleLaunchMission}
+                isStreaming={isStreaming}
+              />
+
+              {/* Real-Time Streaming Terminal */}
+              <StreamTerminal
+                streamedText={streamedText}
+                finalDeliverable={finalDeliverable}
+                citations={citations}
+                criticCritique={criticCritique}
+                isStreaming={isStreaming}
+                executionTrace={executionTrace}
+                sandboxReport={sandboxReport}
+              />
+            </div>
+          )}
+
+          {/* TAB 3: MODEL ROUTER (OpenRouter Sequential Fallback Chains) */}
+          {activeNavTab === 'ROUTER' && (
+            <OpenRouterHub onSelectModel={(m) => console.log('Selected model:', m)} />
+          )}
+
+          {/* TAB 4: ANALYTICS (RAG Observability & Telemetry) */}
+          {activeNavTab === 'ANALYTICS' && (
+            <RAGObservabilityDashboard
+              onOpenKnowledgeManager={() => setIsKnowledgeOpen(true)}
+            />
+          )}
+
+          {/* TAB 5: APPROVALS (Human-in-the-Loop 21 CFR Part 11 Governance) */}
+          {activeNavTab === 'APPROVALS' && (
+            <ApprovalsHub />
+          )}
+
+          {/* TAB 6: SETTINGS (AI Providers & API Keys) */}
+          {activeNavTab === 'SETTINGS' && (
+            <div className="rounded-3xl bg-slate-950 border border-slate-800 p-6 shadow-2xl">
+              <h2 className="text-xl font-bold text-white mb-2">Platform Settings &amp; AI Providers</h2>
+              <p className="text-xs text-slate-400 mb-6">
+                Configure OpenAI, Anthropic, Gemini, Groq, Ollama and Sovereign offline LLM weights.
+              </p>
+              <button
+                onClick={() => {
+                  setAiControlTab('PROVIDERS');
+                  setIsAIControlOpen(true);
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20"
+              >
+                Open Providers &amp; Secret Key Manager
+              </button>
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-800/80 bg-slate-950/80 px-4 py-4 text-center text-xs text-slate-500 font-mono">
+          HorusOps • Sovereign Autonomous Swarm &amp; Vector RAG Platform • Architected &amp; Developed by{' '}
+          <a
+            href="https://github.com/redahafez"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-horus-sky font-bold hover:underline"
+          >
+            Reda Hafez
+          </a>
+        </footer>
+      </div>
+
+      {/* 3. Global Interactive Modals */}
+      {/* ⌘K Interactive Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectTab={setActiveNavTab}
         onOpenKnowledge={() => setIsKnowledgeOpen(true)}
         onOpenAIControl={() => {
           setAiControlTab('PROVIDERS');
           setIsAIControlOpen(true);
         }}
-        onOpenRouter={() => {
-          setAiControlTab('OPENROUTER');
-          setIsAIControlOpen(true);
-        }}
-        onOpenCommandCenter={() => setIsCommandCenterOpen(true)}
-        onOpenRAGDashboard={() => setIsRAGDashboardOpen(true)}
-        totalChunks={documents.length}
-        activeProviderName={activeProviderName}
       />
 
-      {/* 2. Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
-        {/* Telemetry KPI Metrics */}
-        <TelemetryStats
-          totalTokens={totalTokens}
-          latencyMs={latencyMs}
-          verificationScore={verificationScore}
-          totalChunks={documents.length}
-        />
-
-        {/* Dynamic Visual Agent DAG, zeriQ Pipeline & Orchestra Neon Flow */}
-        <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
-
-        {/* Mission Launcher & Presets */}
-        <MissionLauncher
-          presets={presets}
-          selectedDomain={selectedDomain}
-          onSelectDomain={setSelectedDomain}
-          onLaunchMission={handleLaunchMission}
-          isStreaming={isStreaming}
-        />
-
-        {/* Real-Time Streaming Terminal */}
-        <StreamTerminal
-          streamedText={streamedText}
-          finalDeliverable={finalDeliverable}
-          citations={citations}
-          criticCritique={criticCritique}
-          isStreaming={isStreaming}
-          executionTrace={executionTrace}
-          sandboxReport={sandboxReport}
-        />
-      </main>
-
-      {/* 3. Footer */}
-      <footer className="border-t border-slate-800/80 bg-horus-dark/80 px-4 py-4 text-center text-xs text-slate-500 font-mono">
-        HorusAgent-AI • Sovereign Autonomous Swarm &amp; Vector RAG Platform • Architected &amp; Developed by{' '}
-        <a
-          href="https://github.com/redahafez"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-horus-sky font-bold hover:underline"
-        >
-          Reda Hafez
-        </a>
-      </footer>
-
-      {/* 4. Knowledge Base RAG Modal */}
+      {/* Vector RAG Knowledge Explorer Modal */}
       <KnowledgeExplorer
         isOpen={isKnowledgeOpen}
         onClose={() => setIsKnowledgeOpen(false)}
@@ -408,7 +482,7 @@ export default function Home() {
         onDeleteDocument={handleDeleteDocument}
       />
 
-      {/* 5. AI Models & API Keys Enterprise Control Panel & OpenRouter Hub */}
+      {/* AI Providers Control Panel Modal */}
       <AIControlPanel
         key={`${isAIControlOpen}-${aiControlTab}`}
         isOpen={isAIControlOpen}
@@ -416,52 +490,6 @@ export default function Home() {
         onClose={() => setIsAIControlOpen(false)}
         onActiveProviderChanged={(prov) => setActiveProviderName(prov)}
       />
-
-      {/* 6. AI Workflow Command Center Modal (AetherOps) */}
-      {isCommandCenterOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
-            <button
-              onClick={() => setIsCommandCenterOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition z-10"
-              title="Close Command Center"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <CommandCenterHub
-              onClose={() => setIsCommandCenterOpen(false)}
-              onOpenSwarm={() => setIsCommandCenterOpen(false)}
-              onOpenModelRouter={() => {
-                setIsCommandCenterOpen(false);
-                setAiControlTab('OPENROUTER');
-                setIsAIControlOpen(true);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 7. RAG Observability & Operations Modal */}
-      {isRAGDashboardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
-            <button
-              onClick={() => setIsRAGDashboardOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition z-10"
-              title="Close RAG Dashboard"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <RAGObservabilityDashboard
-              onClose={() => setIsRAGDashboardOpen(false)}
-              onOpenKnowledgeManager={() => {
-                setIsRAGDashboardOpen(false);
-                setIsKnowledgeOpen(true);
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
