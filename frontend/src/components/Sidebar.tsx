@@ -83,11 +83,11 @@ export default function Sidebar({
             </div>
             <div>
               <div className="font-bold text-white text-base tracking-tight flex items-center space-x-1.5">
-                <span>HorusOps</span>
+                <span>HorusAgent AI</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
               </div>
               <div className="text-[10px] text-slate-400 font-mono">
-                Autonomous Swarm &amp; RAG
+                Autonomous Swarm &amp; Vector RAG
               </div>
             </div>
           </div>

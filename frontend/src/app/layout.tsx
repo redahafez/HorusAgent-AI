@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'HorusAgent-AI | Enterprise Autonomous Multi-Agent & Vector RAG Platform',
+  title: 'HorusAgent AI | Enterprise Autonomous Multi-Agent & Vector RAG Platform',
   description: 'Enterprise Autonomous Multi-Agent Orchestration & Real-Time Vector RAG Intelligence Platform inspired by the all-seeing Eye of Horus.',
   icons: {
     icon: '/horus-emblem.svg',

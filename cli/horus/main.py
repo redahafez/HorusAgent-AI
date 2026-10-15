@@ -278,5 +278,123 @@ def providers_set_key_cmd(ctx, provider, api_key, model, activate):
         print_error(f"Failed to set provider key: {e}")
         sys.exit(1)
 
+@cli.command("command-center")
+@click.pass_context
+def command_center_cmd(ctx):
+    """View executive AI Workflow Command Center metrics (routing map, spend, approvals, and agent health)."""
+    client: HorusClient = ctx.obj["client"]
+    print_banner()
+    try:
+        data = client.get_command_center()
+        kpis = data.get("kpis", {})
+
+        print_header("HORUSAGENT AI — WORKFLOW COMMAND CENTER")
+        print_info(f"Dashboard Title: {BOLD}{data.get('title', 'AI Workflow Command Center')}{RESET}")
+        print_info(f"Subtitle: {data.get('subtitle', '')}")
+
+        kpi_headers = ["KPI Metric", "Current Value", "Trend Period"]
+        kpi_rows = [
+            ["Monthly Spend", f"${kpis.get('monthly_spend', 0):,}", kpis.get("monthly_spend_trend", "")],
+            ["Workflow Health", f"{kpis.get('workflow_health_pct', 0)}%", kpis.get("workflow_health_trend", "")],
+            ["Approval Rate", f"{kpis.get('approval_rate_pct', 0)}%", kpis.get("approval_rate_trend", "")],
+            ["Active Agents", f"{kpis.get('active_agents', 0)} Agents", kpis.get("active_agents_trend", "")]
+        ]
+        print_table("Executive Top KPIs", kpi_headers, kpi_rows)
+
+        # Routing Map Breakdown
+        routing = data.get("routing_map", {})
+        routing_headers = ["Routing Path Ribbon", "Volume Traffic %", "Target Model & Tier"]
+        routing_rows = [
+            ["Primary Path", f"{routing.get('primary_path_pct', 68)}%", "GPT-4o (Frontier High-Precision)"],
+            ["Secondary Path", f"{routing.get('secondary_path_pct', 22)}%", "Claude 3.5 Sonnet (Reflective Synthesis)"],
+            ["Fallback Path", f"{routing.get('fallback_path_pct', 10)}%", "Llama 3 70B (Sovereign Offline Fallback)"]
+        ]
+        print_table("Sankey Flow Routing Paths", routing_headers, routing_rows)
+
+        # Approval Queue
+        approvals = data.get("approval_queue", [])
+        app_headers = ["ID", "Workflow Task", "Details", "Status"]
+        app_rows = [
+            [a.get("id"), a.get("title"), a.get("subtitle")[:40], a.get("status")]
+            for a in approvals
+        ]
+        print_table("Pending Approval Queue", app_headers, app_rows)
+
+        # Agent Health
+        agents = data.get("agent_health", [])
+        agent_headers = ["Agent Name", "Version", "Uptime %", "Health Status"]
+        agent_rows = [
+            [ag.get("name"), ag.get("version"), f"{ag.get('uptime_pct')}%", f"{GREEN}● Healthy{RESET}"]
+            for ag in agents
+        ]
+        print_table("Swarm Agent Health", agent_headers, agent_rows)
+
+    except Exception as e:
+        print_error(f"Failed to fetch Command Center metrics: {e}")
+        sys.exit(1)
+
+@cli.group("approvals")
+def approvals_group():
+    """Human-in-the-Loop Governance & Approvals (FDA 21 CFR Part 11)."""
+    pass
+
+@approvals_group.command("list")
+@click.pass_context
+def approvals_list_cmd(ctx):
+    """List all pending and approved workflows in the compliance queue."""
+    client: HorusClient = ctx.obj["client"]
+    try:
+        data = client.get_command_center()
+        queue = data.get("approval_queue", [])
+        headers = ["ID", "Workflow Item", "Description", "Status"]
+        rows = [[item.get("id"), item.get("title"), item.get("subtitle"), item.get("status")] for item in queue]
+        print_table("HorusAgent AI Approval Queue", headers, rows)
+    except Exception as e:
+        print_error(f"Failed to fetch approvals: {e}")
+        sys.exit(1)
+
+@approvals_group.command("approve")
+@click.argument("item_id", required=True)
+@click.pass_context
+def approvals_approve_cmd(ctx, item_id):
+    """Approve and electronically sign a workflow item."""
+    client: HorusClient = ctx.obj["client"]
+    try:
+        res = client.update_approval(item_id=item_id, action="Approved", reviewer="CLI Admin")
+        print_success(f"Item '{item_id}' Approved! Sealed status: {BOLD}{res.get('status')}{RESET}")
+    except Exception as e:
+        print_error(f"Failed to approve item: {e}")
+        sys.exit(1)
+
+@cli.command("router")
+@click.pass_context
+def router_cmd(ctx):
+    """Display OpenRouter multi-tier fallback chains and model latency/cost matrix."""
+    client: HorusClient = ctx.obj["client"]
+    print_banner()
+    try:
+        data = client.get_router_overview()
+        print_header("OPENROUTER MULTI-TIER FALLBACK CHAINS")
+
+        chain = data.get("fallback_chain", [])
+        chain_headers = ["Step", "Role", "Model", "Model ID", "Trigger Event", "Execution Mode"]
+        chain_rows = [
+            [str(c.get("step")), c.get("role"), c.get("model"), c.get("model_id"), c.get("on_event"), c.get("mode")]
+            for c in chain
+        ]
+        print_table("Autonomous Fallback Routing Sequence", chain_headers, chain_rows)
+
+        models = data.get("model_comparison", [])
+        model_headers = ["Model", "Provider", "p50 Latency", "Cost / 1M Tokens", "Availability", "Score"]
+        model_rows = [
+            [m.get("name"), m.get("provider"), f"{m.get('latency_p50_ms')}ms", f"${m.get('cost_per_m_tokens'):.2f}", f"{m.get('availability_pct')}%", f"{m.get('score')}/100"]
+            for m in models
+        ]
+        print_table("Frontier & Sovereign Model Benchmark Matrix", model_headers, model_rows)
+    except Exception as e:
+        print_error(f"Failed to fetch model router data: {e}")
+        sys.exit(1)
+
 if __name__ == "__main__":
     cli()
+

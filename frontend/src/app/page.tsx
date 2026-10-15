@@ -447,7 +447,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-slate-800/80 bg-slate-950/80 px-4 py-4 text-center text-xs text-slate-500 font-mono">
-          HorusOps • Sovereign Autonomous Swarm &amp; Vector RAG Platform • Architected &amp; Developed by{' '}
+          HorusAgent AI • Sovereign Autonomous Swarm &amp; Vector RAG Platform • Architected &amp; Developed by{' '}
           <a
             href="https://github.com/redahafez"
             target="_blank"

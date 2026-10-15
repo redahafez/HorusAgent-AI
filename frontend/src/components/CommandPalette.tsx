@@ -282,7 +282,7 @@ export default function CommandPalette({
             <span>↵ to select</span>
             <span>esc to close</span>
           </div>
-          <span>HorusOps Command Palette</span>
+          <span>HorusAgent AI Command Palette</span>
         </div>
       </div>
     </div>

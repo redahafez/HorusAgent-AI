@@ -107,3 +107,29 @@ class HorusClient:
             resp = client.get(f"{self.base_url}/api/v1/providers/analytics")
             resp.raise_for_status()
             return resp.json()
+
+    def get_command_center(self) -> Dict[str, Any]:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(f"{self.base_url}/api/v1/observability/command-center")
+            resp.raise_for_status()
+            return resp.json()
+
+    def update_approval(self, item_id: str, action: str, reviewer: str = "CLI Operator") -> Dict[str, Any]:
+        payload = {"item_id": item_id, "action": action, "reviewer": reviewer}
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post(f"{self.base_url}/api/v1/observability/approval", json=payload)
+            resp.raise_for_status()
+            return resp.json()
+
+    def get_rag_telemetry(self) -> Dict[str, Any]:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(f"{self.base_url}/api/v1/observability/rag-telemetry")
+            resp.raise_for_status()
+            return resp.json()
+
+    def get_router_overview(self) -> Dict[str, Any]:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(f"{self.base_url}/api/v1/providers/router-overview")
+            resp.raise_for_status()
+            return resp.json()
+
