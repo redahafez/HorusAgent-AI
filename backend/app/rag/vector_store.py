@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from .embeddings import embedder
 from .knowledge_seed import ENTERPRISE_KNOWLEDGE_DOCS
@@ -12,7 +12,7 @@ class VectorChunk:
         self.category = category
         self.content = content
         self.vector = vector
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -27,7 +27,7 @@ class VectorChunk:
 class InDiskVectorStore:
     """
     In-memory vector database with semantic cosine similarity search,
-    real-time document ingestion, and category partitioning.
+    real-time document ingestion, recursive text chunking, and category partitioning.
     """
     def __init__(self):
         self.chunks: List[VectorChunk] = []
@@ -55,7 +55,35 @@ class InDiskVectorStore:
         self.chunks.append(chunk)
         return cid
 
-    def search(self, query: str, top_k: int = 3, category: Optional[str] = None, min_similarity: float = 0.35) -> List[KnowledgeCitation]:
+    def chunk_and_ingest(self, title: str, content: str, category: str = "GENERAL", chunk_size: int = 400, overlap: int = 60) -> List[str]:
+        """
+        Splits large documents into sliding-window text chunks and indexes each into the vector store.
+        """
+        if len(content) <= chunk_size:
+            return [self.add_document(title=title, content=content, category=category)]
+
+        chunk_ids = []
+        start = 0
+        chunk_idx = 1
+        while start < len(content):
+            end = min(len(content), start + chunk_size)
+            chunk_text = content[start:end]
+            chunk_title = f"{title} (Part {chunk_idx})"
+            cid = self.add_document(title=chunk_title, content=chunk_text, category=category)
+            chunk_ids.append(cid)
+            chunk_idx += 1
+            if end >= len(content):
+                break
+            start += chunk_size - overlap
+
+        return chunk_ids
+
+    def delete_document(self, chunk_id: str) -> bool:
+        initial_len = len(self.chunks)
+        self.chunks = [c for c in self.chunks if c.chunk_id != chunk_id]
+        return len(self.chunks) < initial_len
+
+    def search(self, query: str, top_k: int = 3, category: Optional[str] = None, min_similarity: float = 0.20) -> List[KnowledgeCitation]:
         if not self.chunks or not query:
             return []
 
@@ -93,3 +121,4 @@ class InDiskVectorStore:
 
 # Global singleton vector store instance
 vector_store = InDiskVectorStore()
+

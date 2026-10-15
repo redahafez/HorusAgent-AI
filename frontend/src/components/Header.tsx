@@ -33,7 +33,7 @@ export default function Header({
           <div className="hidden lg:flex items-center space-x-2 text-xs border-l border-slate-800 pl-4">
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>FDA 21 CFR Part 11 Certified</span>
+              <span>FDA 21 CFR Part 11 Audit Trail</span>
             </span>
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 font-medium">
               <Cpu className="w-3.5 h-3.5" />

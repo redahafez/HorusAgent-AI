@@ -1,7 +1,10 @@
 from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 class AgentRole(str, Enum):
     ORCHESTRATOR = "ORCHESTRATOR"     # Master Planner & DAG Coordinator
@@ -57,7 +60,7 @@ class StreamEvent(BaseModel):
     agent: Optional[AgentRole] = None
     node_id: Optional[str] = None
     data: Dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
 
 class MissionRequest(BaseModel):
     objective: str
@@ -78,4 +81,4 @@ class MissionResult(BaseModel):
     total_latency_ms: int
     verification_score: float # 0.0 - 100.0%
     compliance_passed: bool
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)

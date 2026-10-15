@@ -47,7 +47,7 @@ class CodeArchitectAgent:
                 "class ElectronicSignature:\n"
                 "    user_id: str\n"
                 "    reason: str  # 'APPROVAL', 'REVIEW', 'AUTHORSHIP'\n"
-                "    signed_at: datetime = Field(default_factory=datetime.utcnow)\n"
+                "    signed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))\n"
                 "    payload_hash: str  # SHA-256 integrity seal\n"
                 "```"
             )

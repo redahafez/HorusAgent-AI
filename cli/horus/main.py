@@ -56,7 +56,7 @@ def status_cmd(ctx):
             ["Total Tokens Processed", f"{analytics.get('total_tokens', 0):,}", "Verified"],
             ["Cumulative Cloud Cost", f"${analytics.get('estimated_cost_usd', 0.0):.4f}", "Within Budget"],
             ["Vector Embedder Dimension", f"{health.get('vector_dimension', 128)}-dim Dense", "Normalized Unit"],
-            ["FDA 21 CFR Part 11 Stamp", "SHA-256 Non-Repudiation", "Certified & Sealed"]
+            ["FDA 21 CFR Part 11 Audit Trail", "SHA-256 Non-Repudiation", "ALCOA+ Verified & Sealed"]
         ]
         print_table("Telemetry & Compliance Overview", headers, rows)
     except Exception as e:

@@ -39,13 +39,13 @@ def print_banner():
     if HAS_RICH:
         panel = Panel(
             Text(BANNER_ASCII, style="bold cyan"),
-            subtitle="[bold gold1]FDA 21 CFR Part 11 Certified • Zero-Trust Mesh[/]",
+            subtitle="[bold gold1]FDA 21 CFR Part 11 Audit Trail Controls • Zero-Trust Mesh[/]",
             border_style="bright_blue"
         )
         console.print(panel)
     else:
         print(f"{CYAN}{BOLD}{BANNER_ASCII}{RESET}")
-        print(f"{YELLOW}  [ FDA 21 CFR Part 11 Certified • Zero-Trust Mesh ]{RESET}\n")
+        print(f"{YELLOW}  [ FDA 21 CFR Part 11 Audit Trail Controls • Zero-Trust Mesh ]{RESET}\n")
 
 def print_header(title: str):
     if HAS_RICH:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, timezone
 from ..rag.vector_store import vector_store
 
 router = APIRouter(prefix="/metrics", tags=["Telemetry & Metrics"])
@@ -7,7 +7,7 @@ router = APIRouter(prefix="/metrics", tags=["Telemetry & Metrics"])
 @router.get("")
 async def get_system_metrics():
     return {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "platform": "HorusAgent-AI",
         "version": "1.0.0",
         "status": "OPERATIONAL",

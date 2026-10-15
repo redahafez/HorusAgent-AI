@@ -59,8 +59,12 @@ def health():
             assert "Dockerfile" in file_list
             assert "docker-compose.yml" in file_list
             assert ".env.example" in file_list
+            assert "requirements.txt" in file_list
+            assert "tests/test_service.py" in file_list
 
-            # Verify extracted Python code
+            # Verify runnable test code in ZIP bundle
+            test_file_content = zf.read("tests/test_service.py").decode("utf-8")
+            assert "test_seal_integrity" in test_file_content
             service_code = zf.read("src/service.py").decode("utf-8")
             assert "ZeroTrustMesh" in service_code
 

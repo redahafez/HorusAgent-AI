@@ -28,3 +28,25 @@ def test_vector_store_seed_and_search():
     titles = [h.title for h in hits]
     assert any("Zero-Trust" in t for t in titles)
     assert hits[0].similarity > 30.0
+
+def test_chunk_and_ingest_and_delete():
+    long_doc = "Chapter 1: Security protocols for enterprise AI. " * 20
+    chunk_ids = vector_store.chunk_and_ingest(
+        title="Automated Swarm Hardening Manual",
+        content=long_doc,
+        category="SECURITY_AUDIT",
+        chunk_size=300,
+        overlap=50
+    )
+    assert len(chunk_ids) > 1, "Long document should be partitioned into multiple sliding-window chunks"
+    
+    # Verify search finds the new chunks
+    search_hits = vector_store.search("enterprise AI Security protocols", top_k=2)
+    assert len(search_hits) > 0
+    
+    # Delete first chunk
+    deleted = vector_store.delete_document(chunk_ids[0])
+    assert deleted is True
+    
+    # Deleting non-existent returns False
+    assert vector_store.delete_document("non-existent-id-999") is False

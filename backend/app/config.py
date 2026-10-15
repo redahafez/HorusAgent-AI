@@ -1,9 +1,11 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")
+
     APP_NAME: str = "HorusAgent-AI"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.1.0"
     ENVIRONMENT: str = "production"
     DEBUG: bool = False
     
@@ -25,9 +27,5 @@ class Settings(BaseSettings):
     ENABLE_PII_SANITATION: bool = True
     MAX_TOKEN_BUDGET: int = 16000
     RATE_LIMIT_PER_MINUTE: int = 60
-
-    class Config:
-        env_file = ".env"
-        extra = "allow"
 
 settings = Settings()

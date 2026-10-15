@@ -1,7 +1,7 @@
 import asyncio
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import AsyncGenerator, Callable, Optional, List, Any
 
 from .models import (
@@ -78,7 +78,7 @@ class SwarmExecutionEngine:
         # 2. Execute Node 1: Research & Vector RAG
         node1 = dag_nodes[0]
         node1.state = AgentState.EXECUTING
-        node1.started_at = datetime.utcnow()
+        node1.started_at = datetime.now(timezone.utc)
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.RESEARCHER, node1.id, {"state": node1.state})
 
         t0 = time.time()
@@ -86,7 +86,7 @@ class SwarmExecutionEngine:
         node1.latency_ms = int((time.time() - t0) * 1000)
         node1.output = research_context
         node1.state = AgentState.COMPLETED
-        node1.completed_at = datetime.utcnow()
+        node1.completed_at = datetime.now(timezone.utc)
         node1.confidence = 0.98
         total_tokens += 450
 
@@ -97,7 +97,7 @@ class SwarmExecutionEngine:
         # 3. Execute Node 2: Architect & Code Synthesis
         node2 = dag_nodes[1]
         node2.state = AgentState.EXECUTING
-        node2.started_at = datetime.utcnow()
+        node2.started_at = datetime.now(timezone.utc)
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.ARCHITECT, node2.id, {"state": node2.state})
 
         t0 = time.time()
@@ -115,7 +115,7 @@ class SwarmExecutionEngine:
         node2.latency_ms = int((time.time() - t0) * 1000)
         node2.output = synthesized_code
         node2.state = AgentState.COMPLETED
-        node2.completed_at = datetime.utcnow()
+        node2.completed_at = datetime.now(timezone.utc)
         node2.confidence = 0.96
         total_tokens += 1280
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.ARCHITECT, node2.id, {"state": node2.state, "latency_ms": node2.latency_ms})
@@ -123,7 +123,7 @@ class SwarmExecutionEngine:
         # 4. Execute Node 3: Critic Reflection & Anti-Hallucination
         node3 = dag_nodes[2]
         node3.state = AgentState.REFLECTING
-        node3.started_at = datetime.utcnow()
+        node3.started_at = datetime.now(timezone.utc)
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.CRITIC, node3.id, {"state": node3.state})
 
         t0 = time.time()
@@ -132,7 +132,7 @@ class SwarmExecutionEngine:
         node3.latency_ms = int((time.time() - t0) * 1000)
         node3.output = critic_critique
         node3.state = AgentState.VERIFIED
-        node3.completed_at = datetime.utcnow()
+        node3.completed_at = datetime.now(timezone.utc)
         node3.confidence = verification_score / 100.0
         total_tokens += 380
         await emit(StreamEventType.CRITIC_VERIFICATION, AgentRole.CRITIC, node3.id, {"score": verification_score, "critique": critic_critique})
@@ -141,7 +141,7 @@ class SwarmExecutionEngine:
         # 5. Execute Node 4: Governance & PII Sealing
         node4 = dag_nodes[3]
         node4.state = AgentState.EXECUTING
-        node4.started_at = datetime.utcnow()
+        node4.started_at = datetime.now(timezone.utc)
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.GOVERNANCE, node4.id, {"state": node4.state})
 
         t0 = time.time()
@@ -151,7 +151,7 @@ class SwarmExecutionEngine:
         node4.latency_ms = int((time.time() - t0) * 1000)
         node4.output = f"Audit Seal: {seal_hash}"
         node4.state = AgentState.COMPLETED
-        node4.completed_at = datetime.utcnow()
+        node4.completed_at = datetime.now(timezone.utc)
         node4.confidence = 1.0
         total_tokens += 260
         await emit(StreamEventType.GOVERNANCE_AUDIT, AgentRole.GOVERNANCE, node4.id, {"hash": seal_hash, "passed": compliance_passed})
