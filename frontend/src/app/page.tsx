@@ -16,6 +16,8 @@ import OpenRouterHub from '@/components/OpenRouterHub';
 import ApprovalsHub from '@/components/ApprovalsHub';
 import AdminGovernanceHub from '@/components/AdminGovernanceHub';
 import AuthModal from '@/components/AuthModal';
+import VisualWorkflowStudio from '@/components/VisualWorkflowStudio';
+import { Terminal as TerminalIcon, Layers } from 'lucide-react';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -83,6 +85,7 @@ export default function Home() {
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
   const [aiControlTab, setAiControlTab] = useState<'PROVIDERS' | 'OPENROUTER' | 'HYPERPARAMS' | 'MATRIX' | 'ANALYTICS'>('PROVIDERS');
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
+  const [workflowViewMode, setWorkflowViewMode] = useState<'CONSOLE' | 'STUDIO'>('CONSOLE');
 
   // User Authentication & Anti-Breach State
   const [currentUser, setCurrentUser] = useState<any>(() => {
@@ -432,43 +435,101 @@ export default function Home() {
             />
           )}
 
-          {/* TAB 2: WORKFLOWS (Multi-Agent Autonomous Swarm & Mission Console) */}
+          {/* TAB 2: WORKFLOWS (Multi-Agent Autonomous Swarm & Mission Console / Visual Studio) */}
           {activeNavTab === 'WORKFLOWS' && (
             <div className="space-y-6 animate-fadeIn">
-              {/* Telemetry KPI Metrics */}
-              <TelemetryStats
-                totalTokens={totalTokens}
-                latencyMs={latencyMs}
-                verificationScore={verificationScore}
-                totalChunks={documents.length}
-              />
+              {/* Studio Mode Toggle Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-800">
+                <div className="flex items-center space-x-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+                  <button
+                    onClick={() => setWorkflowViewMode('CONSOLE')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                      workflowViewMode === 'CONSOLE'
+                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <TerminalIcon className="w-3.5 h-3.5" />
+                    <span>Swarm Execution Console</span>
+                  </button>
+                  <button
+                    onClick={() => setWorkflowViewMode('STUDIO')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                      workflowViewMode === 'STUDIO'
+                        ? 'bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Visual DAG Canvas Studio</span>
+                  </button>
+                </div>
 
-              {/* Dynamic Visual Agent DAG, zeriQ Pipeline & Orchestra Neon Flow */}
-              <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
+                <div className="text-xs text-slate-400 font-mono hidden sm:block">
+                  {workflowViewMode === 'CONSOLE'
+                    ? 'Active Swarm Pipeline • Live Token Broadcaster'
+                    : 'Drag-and-Drop Node Orchestration • Kahn Cycle Validator'}
+                </div>
+              </div>
 
-              {/* Mission Launcher & Presets */}
-              <MissionLauncher
-                presets={presets}
-                selectedDomain={selectedDomain}
-                onSelectDomain={setSelectedDomain}
-                onLaunchMission={handleLaunchMission}
-                isStreaming={isStreaming}
-              />
+              {workflowViewMode === 'CONSOLE' ? (
+                <>
+                  {/* Telemetry KPI Metrics */}
+                  <TelemetryStats
+                    totalTokens={totalTokens}
+                    latencyMs={latencyMs}
+                    verificationScore={verificationScore}
+                    totalChunks={documents.length}
+                  />
 
-              {/* Real-Time Streaming Terminal */}
-              <StreamTerminal
-                streamedText={streamedText}
-                finalDeliverable={finalDeliverable}
-                citations={citations}
-                criticCritique={criticCritique}
-                isStreaming={isStreaming}
-                executionTrace={executionTrace}
-                sandboxReport={sandboxReport}
+                  {/* Dynamic Visual Agent DAG, zeriQ Pipeline & Orchestra Neon Flow */}
+                  <AgentGraph nodes={nodes} activeNodeId={activeNodeId} />
+
+                  {/* Mission Launcher & Presets */}
+                  <MissionLauncher
+                    presets={presets}
+                    selectedDomain={selectedDomain}
+                    onSelectDomain={setSelectedDomain}
+                    onLaunchMission={handleLaunchMission}
+                    isStreaming={isStreaming}
+                  />
+
+                  {/* Real-Time Streaming Terminal */}
+                  <StreamTerminal
+                    streamedText={streamedText}
+                    finalDeliverable={finalDeliverable}
+                    citations={citations}
+                    criticCritique={criticCritique}
+                    isStreaming={isStreaming}
+                    executionTrace={executionTrace}
+                    sandboxReport={sandboxReport}
+                  />
+                </>
+              ) : (
+                <VisualWorkflowStudio
+                  onSwitchToConsole={(obj) => {
+                    setWorkflowViewMode('CONSOLE');
+                    if (obj) handleLaunchMission(obj, selectedDomain, true, true);
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: DAG CANVAS STUDIO (Dedicated Navigation) */}
+          {activeNavTab === 'STUDIO' && (
+            <div className="space-y-6 animate-fadeIn">
+              <VisualWorkflowStudio
+                onSwitchToConsole={(obj) => {
+                  setActiveNavTab('WORKFLOWS');
+                  setWorkflowViewMode('CONSOLE');
+                  if (obj) handleLaunchMission(obj, selectedDomain, true, true);
+                }}
               />
             </div>
           )}
 
-          {/* TAB 3: MODEL ROUTER (OpenRouter Sequential Fallback Chains) */}
+          {/* TAB 4: MODEL ROUTER (OpenRouter Sequential Fallback Chains) */}
           {activeNavTab === 'ROUTER' && (
             <OpenRouterHub onSelectModel={(m) => console.log('Selected model:', m)} />
           )}

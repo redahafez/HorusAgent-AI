@@ -62,6 +62,18 @@ export default function CommandPalette({
       badge: 'Swarm'
     },
     {
+      id: 'cmd-studio',
+      category: 'NAVIGATION',
+      title: 'DAG Canvas Studio - Visual Agent Orchestrator',
+      subtitle: 'Drag-and-drop agent nodes, live bezier connections, and Kahn cycle validation',
+      icon: GitBranch,
+      action: () => {
+        onSelectTab('STUDIO');
+        onClose();
+      },
+      badge: 'Visual'
+    },
+    {
       id: 'cmd-router',
       category: 'NAVIGATION',
       title: 'Model Router - OpenRouter Fallback Chains',

@@ -11,6 +11,7 @@ from .api.routes_providers import router as providers_router, openai_compatible_
 from .api.routes_observability import router as observability_router
 from .api.routes_admin import router as admin_router
 from .api.routes_auth import router as auth_router
+from .api.routes_workflows import router as workflows_router
 from .agents.models import MissionRequest, StreamEvent
 from .agents.engine import swarm_engine
 
@@ -39,6 +40,7 @@ app.include_router(providers_router, prefix="/api/v1")
 app.include_router(observability_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(workflows_router, prefix="/api/v1")
 
 @app.post("/api/v1/chat/completions", tags=["OpenAI Compatibility"])
 async def root_chat_completions(req: OpenAIChatCompletionRequest):

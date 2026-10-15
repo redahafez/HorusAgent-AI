@@ -4,10 +4,10 @@ import React from 'react';
 import {
   LayoutDashboard, GitBranch, Users, BarChart2, ShieldCheck,
   Network, Settings, Smartphone, ExternalLink, ChevronRight, Check, X,
-  Building2, LogOut, Lock, ShieldAlert
+  Building2, LogOut, Lock, ShieldAlert, Layers
 } from 'lucide-react';
 
-export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'ADMIN' | 'SETTINGS';
+export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'STUDIO' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'ADMIN' | 'SETTINGS';
 
 interface SidebarProps {
   activeTab: NavTabType;
@@ -44,6 +44,12 @@ export default function Sidebar({
       label: 'Workflows',
       icon: GitBranch,
       badge: '5 Synced'
+    },
+    {
+      id: 'STUDIO' as NavTabType,
+      label: 'DAG Canvas Studio',
+      icon: Layers,
+      badge: 'Visual'
     },
     {
       id: 'ROUTER' as NavTabType,
