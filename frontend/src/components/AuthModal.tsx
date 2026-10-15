@@ -224,7 +224,7 @@ export default function AuthModal({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Sign In (تسجيل الدخول)
+                Sign In
               </button>
               <button
                 type="button"
@@ -238,7 +238,7 @@ export default function AuthModal({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Register (إنشاء حساب جديد)
+                Create Account
               </button>
             </div>
           )}
@@ -307,7 +307,7 @@ export default function AuthModal({
               {/* Quick Persona Fill Pills */}
               <div>
                 <span className="text-[10px] uppercase font-mono font-bold text-slate-500 block mb-1.5">
-                  ⚡ Quick Demo Credentials (اختر حسابًا للتجربة الفورية):
+                  ⚡ Quick Demo Persona Credentials:
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
