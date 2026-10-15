@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import {
   DollarSign, Activity, ShieldCheck, Users, ArrowUpRight, ArrowDownRight,
   ChevronRight, CheckCircle2, AlertTriangle, AlertCircle, RefreshCw, Sparkles,
-  ExternalLink, FileText, Check, ShieldAlert, Zap, Compass, Filter
+  ExternalLink, FileText, Check, ShieldAlert, Zap, Compass, Filter, X, Lock,
+  TrendingDown, FileCheck, Layers
 } from 'lucide-react';
 
 interface CommandCenterHubProps {
@@ -19,6 +20,11 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
   const [approvalQueue, setApprovalQueue] = useState<any[]>([]);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [selectedPath, setSelectedPath] = useState<'primary' | 'secondary' | 'fallback'>('primary');
+
+  // Modals
+  const [selectedApprovalItem, setSelectedApprovalItem] = useState<any | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
+  const [incidentResolved, setIncidentResolved] = useState(false);
 
   useEffect(() => {
     fetchCommandCenter();
@@ -45,12 +51,40 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
       const res = await fetch('/api/v1/observability/approval', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item_id: itemId, action, reviewer: 'Platform Admin' })
+        body: JSON.stringify({ item_id: itemId, action, reviewer: 'Sarah Chen (Platform Admin)' })
       });
       if (res.ok) {
         setApprovalQueue(prev => prev.map(item => item.id === itemId ? { ...item, status: action, timestamp: 'Just now' } : item));
         setActionMessage(`✓ Item marked as ${action}`);
-        setTimeout(() => setActionMessage(null), 3000);
+        if (selectedApprovalItem && selectedApprovalItem.id === itemId) {
+          setSelectedApprovalItem((prev: any) => ({ ...prev, status: action }));
+        }
+        setTimeout(() => setActionMessage(null), 3500);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleResolveAlert = async (alertId: string, actionTaken: string) => {
+    try {
+      const res = await fetch('/api/v1/observability/resolve-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alert_id: alertId,
+          action_taken: actionTaken,
+          operator: 'Sarah Chen (Platform Admin)'
+        })
+      });
+      if (res.ok) {
+        setIncidentResolved(true);
+        setActionMessage('✓ Mitigation Policy Enforced: Semantic Caching Enabled (Est. 74% Savings)');
+        setTimeout(() => {
+          setSelectedIncident(null);
+          setIncidentResolved(false);
+          setActionMessage(null);
+        }, 2500);
       }
     } catch (e) {
       console.error(e);
@@ -60,8 +94,8 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center p-16 text-slate-400 space-x-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-horus-cyan" />
-        <span className="font-mono text-sm">Synchronizing AI Workflow Command Center...</span>
+        <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
+        <span className="font-mono text-sm">Synchronizing HorusAgent AI Command Center...</span>
       </div>
     );
   }
@@ -250,7 +284,9 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 <path
                   d="M 50,40 C 130,40 130,45 200,45 C 270,45 270,50 350,50 C 420,50 450,70 530,70 L 530,95 C 450,95 420,75 350,75 C 270,75 270,70 200,70 C 130,70 130,65 50,65 Z"
                   fill="url(#primaryGradient)"
-                  className="transition-all duration-300 hover:opacity-100 opacity-80 cursor-pointer"
+                  className={`transition-all duration-300 cursor-pointer ${
+                    selectedPath === 'primary' ? 'opacity-100 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' : 'opacity-70 hover:opacity-90'
+                  }`}
                   onClick={() => setSelectedPath('primary')}
                 />
 
@@ -258,7 +294,9 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 <path
                   d="M 50,75 C 130,75 130,95 200,95 C 270,95 270,110 350,110 C 420,110 450,85 530,85 L 530,105 C 450,105 420,125 350,125 C 270,125 270,110 200,110 C 130,110 130,90 50,90 Z"
                   fill="url(#secondaryGradient)"
-                  className="transition-all duration-300 hover:opacity-100 opacity-70 cursor-pointer"
+                  className={`transition-all duration-300 cursor-pointer ${
+                    selectedPath === 'secondary' ? 'opacity-100 filter drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' : 'opacity-60 hover:opacity-90'
+                  }`}
                   onClick={() => setSelectedPath('secondary')}
                 />
 
@@ -266,16 +304,16 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 <path
                   d="M 50,100 C 130,100 130,135 200,135 C 270,135 270,150 350,150 C 420,150 450,140 530,140 L 530,155 C 450,155 420,165 350,165 C 270,165 270,145 200,145 C 130,145 130,110 50,110 Z"
                   fill="url(#fallbackGradient)"
-                  className="transition-all duration-300 hover:opacity-100 opacity-60 cursor-pointer"
+                  className={`transition-all duration-300 cursor-pointer ${
+                    selectedPath === 'fallback' ? 'opacity-100 filter drop-shadow-[0_0_8px_rgba(14,165,233,0.5)]' : 'opacity-50 hover:opacity-90'
+                  }`}
                   onClick={() => setSelectedPath('fallback')}
                 />
 
                 {/* Stage Indicator Nodes */}
-                {/* Intake Node */}
                 <circle cx="50" cy="52" r="14" fill="#6366f1" stroke="#c084fc" strokeWidth="2.5" />
                 <text x="50" y="56" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="bold">IN</text>
 
-                {/* Classify Nodes */}
                 <circle cx="200" cy="57" r="13" fill="#8b5cf6" stroke="#e879f9" strokeWidth="2" />
                 <text x="200" y="32" textAnchor="middle" fill="#c084fc" fontSize="9" fontWeight="bold">68%</text>
 
@@ -285,7 +323,6 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 <circle cx="200" cy="140" r="9" fill="#0284c7" stroke="#0ea5e9" strokeWidth="1.5" />
                 <text x="200" y="160" textAnchor="middle" fill="#0ea5e9" fontSize="9" fontWeight="bold">10%</text>
 
-                {/* Review Nodes */}
                 <circle cx="350" cy="62" r="13" fill="#a855f7" stroke="#f472b6" strokeWidth="2" />
                 <text x="350" y="36" textAnchor="middle" fill="#f472b6" fontSize="9" fontWeight="bold">72%</text>
 
@@ -295,12 +332,10 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 <circle cx="350" cy="157" r="9" fill="#0369a1" stroke="#38bdf8" strokeWidth="1.5" />
                 <text x="350" y="178" textAnchor="middle" fill="#38bdf8" fontSize="9" fontWeight="bold">10%</text>
 
-                {/* Fallback Node */}
                 <circle cx="450" cy="120" r="12" fill="#d97706" stroke="#fbbf24" strokeWidth="2" />
                 <text x="450" y="105" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">46%</text>
                 <text x="450" y="145" textAnchor="middle" fill="#f59e0b" fontSize="8">Fallback</text>
 
-                {/* Deliver Target Nodes */}
                 <circle cx="530" cy="82" r="15" fill="#059669" stroke="#34d399" strokeWidth="2.5" />
                 <text x="530" y="60" textAnchor="middle" fill="#34d399" fontSize="9" fontWeight="bold">91%</text>
                 <text x="530" y="86" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold">✓</text>
@@ -312,50 +347,89 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
             </div>
           </div>
 
-          {/* Flow path legends */}
-          <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-slate-800/80 text-xs">
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => setSelectedPath('primary')}
-                className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
-                  selectedPath === 'primary' ? 'bg-purple-950/60 border border-purple-500/40 text-purple-300' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                <span>Primary path</span>
-                <span className="font-mono font-bold text-white">68%</span>
-              </button>
+          {/* Flow path legends & details */}
+          <div className="space-y-3 mt-4 pt-3 border-t border-slate-800/80 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-4 sm:space-x-6">
+                <button
+                  onClick={() => setSelectedPath('primary')}
+                  className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
+                    selectedPath === 'primary' ? 'bg-purple-950/60 border border-purple-500/40 text-purple-300' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                  <span>Primary path</span>
+                  <span className="font-mono font-bold text-white">68%</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedPath('secondary')}
+                  className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
+                    selectedPath === 'secondary' ? 'bg-cyan-950/60 border border-cyan-500/40 text-cyan-300' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                  <span>Secondary path</span>
+                  <span className="font-mono font-bold text-white">22%</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedPath('fallback')}
+                  className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
+                    selectedPath === 'fallback' ? 'bg-sky-950/60 border border-sky-500/40 text-sky-300' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                  <span>Fallback path</span>
+                  <span className="font-mono font-bold text-white">10%</span>
+                </button>
+              </div>
 
               <button
-                onClick={() => setSelectedPath('secondary')}
-                className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
-                  selectedPath === 'secondary' ? 'bg-cyan-950/60 border border-cyan-500/40 text-cyan-300' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                onClick={onOpenModelRouter}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center space-x-1"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                <span>Secondary path</span>
-                <span className="font-mono font-bold text-white">22%</span>
-              </button>
-
-              <button
-                onClick={() => setSelectedPath('fallback')}
-                className={`flex items-center space-x-2 px-2.5 py-1 rounded-lg transition ${
-                  selectedPath === 'fallback' ? 'bg-sky-950/60 border border-sky-500/40 text-sky-300' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-                <span>Fallback path</span>
-                <span className="font-mono font-bold text-white">10%</span>
+                <span>Manage routing rules</span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <button
-              onClick={onOpenModelRouter}
-              className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center space-x-1"
-            >
-              <span>Manage routing rules</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+            {/* Path Details Breakdown Card */}
+            <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-xs animate-fadeIn">
+              {selectedPath === 'primary' && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-purple-300">Primary Route: GPT-4o Frontier Swarm</span>
+                    <p className="text-[11px] text-slate-400 mt-0.5">High-precision general orchestration • 742ms p50 latency • $2.50 / 1M tokens • 0.02% error rate</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded font-mono text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 flex-shrink-0">
+                    68% Traffic Share
+                  </span>
+                </div>
+              )}
+              {selectedPath === 'secondary' && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-cyan-300">Secondary Route: Claude 3.5 Sonnet</span>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Complex architecture synthesis &amp; code review • 812ms p50 latency • $3.00 / 1M tokens</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded font-mono text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex-shrink-0">
+                    22% Traffic Share
+                  </span>
+                </div>
+              )}
+              {selectedPath === 'fallback' && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-sky-300">Fallback Route: Llama 3 70B &amp; Sovereign Local</span>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Air-gapped offline failover triggered automatically on HTTP 429/503 • 180ms p50 • $0.00 cost</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded font-mono text-[10px] bg-sky-500/20 text-sky-300 border border-sky-500/30 flex-shrink-0">
+                    10% Traffic Share
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -377,12 +451,15 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
               {approvalQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-slate-700 transition flex items-center justify-between"
+                  onClick={() => setSelectedApprovalItem(item)}
+                  className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-slate-700 transition flex items-center justify-between cursor-pointer group"
                 >
                   <div className="flex items-center space-x-2.5 min-w-0">
                     <div className="text-lg flex-shrink-0">{item.avatar || '📄'}</div>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold text-white truncate">{item.title}</div>
+                      <div className="text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition">
+                        {item.title}
+                      </div>
                       <div className="text-[11px] text-slate-400 truncate">{item.subtitle}</div>
                     </div>
                   </div>
@@ -390,7 +467,10 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                   <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
                     {item.status === 'Needs review' ? (
                       <button
-                        onClick={() => handleApprovalAction(item.id, 'Approved')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprovalAction(item.id, 'Approved');
+                        }}
                         className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 transition"
                       >
                         Needs review
@@ -401,7 +481,10 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                       </span>
                     ) : (
                       <button
-                        onClick={() => handleApprovalAction(item.id, 'Approved')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprovalAction(item.id, 'Approved');
+                        }}
                         className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition"
                       >
                         Escalated
@@ -445,7 +528,6 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                   stroke="#818cf8"
                   strokeWidth="2.5"
                 />
-                {/* May 24 Highlight Pin */}
                 <circle cx="180" cy="18" r="4" fill="#a855f7" stroke="#ffffff" strokeWidth="1.5" />
               </svg>
 
@@ -490,7 +572,6 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
                     Healthy
                   </span>
-                  {/* Mini sparkline */}
                   <svg className="w-10 h-4" viewBox="0 0 40 16">
                     <path
                       d="M 0,10 L 10,7 L 20,9 L 30,4 L 40,3"
@@ -522,8 +603,19 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
                 </div>
               </div>
               <button
-                onClick={() => alert('Reviewing invoice agent cost telemetry...')}
-                className="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                onClick={() =>
+                  setSelectedIncident({
+                    id: 'alert-1',
+                    title: 'High cost spike detected',
+                    agent: 'Invoice Agent',
+                    timestamp: 'May 24, 2026 at 2:14 PM UTC',
+                    peak_amount: '$2,840.00',
+                    tokens: '482,000 Tokens',
+                    rca: 'Repetitive un-cached vector similarity scans over 14 vendor contracts.',
+                    recommended_policy: 'SEMANTIC_CACHE_ENABLED'
+                  })
+                }
+                className="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition"
               >
                 Review
               </button>
@@ -568,6 +660,149 @@ export default function CommandCenterHub({ onClose, onOpenSwarm, onOpenModelRout
           </button>
         </div>
       </div>
+
+      {/* MODAL 1: ALCOA+ 21 CFR Part 11 Electronic Signature Stamp Modal */}
+      {selectedApprovalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-xl rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setSelectedApprovalItem(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">ALCOA+ Electronic Signature Stamp</h3>
+                <p className="text-xs text-slate-400">FDA 21 CFR Part 11 Non-Repudiation Audit Record</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2 mb-4 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Task Title:</span>
+                <span className="font-semibold text-white">{selectedApprovalItem.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Details:</span>
+                <span className="font-mono text-slate-300">{selectedApprovalItem.subtitle}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Current Status:</span>
+                <span className="font-semibold text-indigo-400">{selectedApprovalItem.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Digital Hash:</span>
+                <span className="font-mono text-emerald-400 text-[10px]">SHA256:d8a4f91b7e3c...88f2</span>
+              </div>
+            </div>
+
+            {/* ALCOA+ Checklist */}
+            <div className="space-y-1.5 mb-5 text-xs">
+              <div className="flex items-center space-x-2 text-slate-300">
+                <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Attributable to authenticated autonomous agent swarm</span>
+              </div>
+              <div className="flex items-center space-x-2 text-slate-300">
+                <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Legible audit trail verified in dense vector storage</span>
+              </div>
+              <div className="flex items-center space-x-2 text-slate-300">
+                <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Contemporaneous timestamps recorded in immutable log</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
+              <button
+                onClick={() => setSelectedApprovalItem(null)}
+                className="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleApprovalAction(selectedApprovalItem.id, 'Escalated')}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 transition"
+              >
+                Escalate
+              </button>
+              <button
+                onClick={() => handleApprovalAction(selectedApprovalItem.id, 'Approved')}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg shadow-emerald-600/20"
+              >
+                Approve &amp; Sign Seal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Incident Root Cause Analysis (RCA) & Mitigation Modal */}
+      {selectedIncident && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-xl rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-6">
+            <button
+              onClick={() => setSelectedIncident(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">{selectedIncident.title}</h3>
+                <p className="text-xs text-slate-400">{selectedIncident.agent} • {selectedIncident.timestamp}</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 mb-4 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Peak Spend:</span>
+                <span className="font-bold text-amber-400 font-mono">{selectedIncident.peak_amount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Token Volume:</span>
+                <span className="font-mono text-white">{selectedIncident.tokens}</span>
+              </div>
+              <div className="pt-2 border-t border-slate-800">
+                <span className="text-slate-400 block mb-1">Root Cause Analysis (RCA):</span>
+                <p className="text-slate-300 text-[11px] leading-relaxed">{selectedIncident.rca}</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs mb-5">
+              <div className="font-semibold text-indigo-300 mb-1">Recommended Policy Fix:</div>
+              <p className="text-[11px] text-slate-300">
+                Enable 128-dim Semantic Cache &amp; route extraction to Groq LPU (Est. 74% cost reduction).
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
+              <button
+                onClick={() => setSelectedIncident(null)}
+                className="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white"
+              >
+                Dismiss
+              </button>
+              <button
+                disabled={incidentResolved}
+                onClick={() => handleResolveAlert(selectedIncident.id, selectedIncident.recommended_policy)}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30"
+              >
+                {incidentResolved ? 'Policy Enforced ✓' : 'Apply Mitigation Policy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

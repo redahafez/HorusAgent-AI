@@ -51,3 +51,31 @@ def test_get_rag_telemetry():
     assert len(data["evaluation_summary"]["breakdown"]) == 4
     assert data["knowledge_graph"]["node_count"] == 24
     assert len(data["recent_alerts"]) >= 3
+
+def test_simulate_fallback():
+    payload = {
+        "initial_model": "gpt-4o",
+        "failure_mode": "HTTP_429_RATE_LIMIT"
+    }
+    res = client.post("/api/v1/observability/simulate-fallback", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["circuit_broken"] is True
+    assert len(data["failover_steps"]) == 2
+    assert data["failover_steps"][0]["status"] == "FAILED"
+    assert data["failover_steps"][1]["status"] == "SUCCEEDED"
+    assert data["sla_preserved"] is True
+
+def test_resolve_system_alert():
+    payload = {
+        "alert_id": "alert-1",
+        "action_taken": "SEMANTIC_CACHE_ENABLED",
+        "operator": "Dr. Sarah Chen"
+    }
+    res = client.post("/api/v1/observability/resolve-alert", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["alert_id"] == "alert-1"
+    assert data["mitigation_status"] == "ACTIVE_APPLIED"
+

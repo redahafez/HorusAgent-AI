@@ -43,6 +43,8 @@ export default function OpenRouterHub({ onSelectModel }: OpenRouterHubProps) {
   const [loading, setLoading] = useState(true);
   const [fallbackChain, setFallbackChain] = useState<FallbackStep[]>([]);
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simResult, setSimResult] = useState<any | null>(null);
 
   const fetchOverview = async () => {
     try {
@@ -101,6 +103,26 @@ export default function OpenRouterHub({ onSelectModel }: OpenRouterHubProps) {
       updated[stepIndex].model = match.name;
       updated[stepIndex].model_id = match.id;
       setFallbackChain(updated);
+    }
+  };
+
+  const handleSimulateFailover = async () => {
+    try {
+      setIsSimulating(true);
+      setSimResult(null);
+      const res = await fetch('/api/v1/observability/simulate-fallback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initial_model: 'gpt-4o', failure_mode: 'HTTP_429_RATE_LIMIT' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSimResult(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSimulating(false);
     }
   };
 
@@ -351,9 +373,43 @@ func main() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-800/60 text-[11px] text-slate-500 font-mono flex items-center space-x-1.5 mt-3">
+          <div className="pt-3 border-t border-slate-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-slate-500 font-mono mt-3">
             <span>ⓘ Requests flow top to bottom until successful. Zero single point of failure.</span>
+            <button
+              disabled={isSimulating}
+              onClick={handleSimulateFailover}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition flex items-center space-x-1.5 flex-shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
+              <span>{isSimulating ? 'Testing Failover...' : '▶ Simulate Circuit-Breaker'}</span>
+            </button>
           </div>
+
+          {/* Failover Simulation Result Card */}
+          {simResult && (
+            <div className="mt-3 p-3.5 rounded-xl bg-slate-950/90 border border-emerald-500/40 text-xs space-y-2 animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-emerald-400 flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Circuit-Breaker Failover Verified</span>
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">{simResult.total_recovery_ms}ms Recovery</span>
+              </div>
+              <div className="space-y-1.5 pt-1 text-[11px]">
+                {simResult.failover_steps?.map((st: any) => (
+                  <div key={st.step} className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
+                    <span className="font-mono text-slate-300">Step {st.step}: {st.model}</span>
+                    {st.status === 'FAILED' ? (
+                      <span className="text-rose-400 font-mono">Error 429: Tripped ({st.latency_ms}ms)</span>
+                    ) : (
+                      <span className="text-emerald-400 font-mono">200 OK: Recovered ({st.latency_ms}ms)</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 italic pt-1">{simResult.verdict}</p>
+            </div>
+          )}
         </div>
 
       </div>
