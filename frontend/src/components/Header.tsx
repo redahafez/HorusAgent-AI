@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Bell, ChevronDown, ArrowRight, Menu, ShieldCheck,
   CheckCircle2, AlertTriangle, AlertCircle, Sparkles, Terminal,
-  LayoutDashboard, Database, Key, ExternalLink, Github
+  LayoutDashboard, Database, Key, ExternalLink, Github, Building2, Award
 } from 'lucide-react';
 import { NavTabType } from './Sidebar';
 
@@ -169,57 +169,83 @@ export default function Header({
             )}
           </div>
 
-          {/* User Profile Pill */}
+          {/* User Profile Pill - Super Admin Reda Hafez */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left transition"
+              className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10"
             >
               {/* Profile Avatar */}
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-600 p-0.5 flex-shrink-0">
-                <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center text-[11px] font-bold text-white">
-                  SC
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-sm shadow-cyan-500/30">
+                <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center text-[11px] font-bold text-cyan-300">
+                  RH
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="text-[11px] font-semibold text-white leading-tight">
-                  By Sarah Chen
+                <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
+                  <span>Reda Hafez</span>
+                  <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">Admin</span>
                 </div>
-                <div className="text-[9px] text-slate-400 leading-tight">
-                  Platform Admin
+                <div className="text-[9px] text-cyan-400 font-mono leading-tight">
+                  Chief Architect
                 </div>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
                 <div className="flex items-center space-x-3 pb-3 border-b border-slate-800 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                    SC
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md">
+                    <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-bold text-xs text-cyan-300">
+                      RH
+                    </div>
                   </div>
                   <div>
-                    <div className="font-bold text-white">Sarah Chen</div>
-                    <div className="text-[10px] text-slate-400">sarah.chen@horus.internal</div>
+                    <div className="font-bold text-white flex items-center space-x-1.5">
+                      <span>Reda Hafez</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-400 text-slate-950">
+                        ROOT
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-cyan-400 font-mono">reda.hafez@horusagent.ai</div>
                   </div>
                 </div>
 
-                <div className="space-y-1 mb-3">
-                  <div className="flex items-center justify-between text-slate-400 py-1">
+                <div className="space-y-1 mb-3 text-[11px]">
+                  <div className="flex items-center justify-between text-slate-400 py-0.5">
                     <span>Role:</span>
-                    <span className="text-indigo-400 font-mono font-semibold">Platform Admin</span>
+                    <span className="text-amber-300 font-mono font-bold">Platform Super Admin</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400 py-1">
+                  <div className="flex items-center justify-between text-slate-400 py-0.5">
+                    <span>Scope:</span>
+                    <span className="text-cyan-400 font-mono">Universal Root (*:*)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400 py-0.5">
+                    <span>MFA:</span>
+                    <span className="text-emerald-400 font-mono">FIPS 140-2 Key Verified</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400 py-0.5">
                     <span>Active Provider:</span>
-                    <span className="text-emerald-400 font-mono font-semibold uppercase">{activeProviderName}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-400 py-1">
-                    <span>Audit Standard:</span>
-                    <span className="text-cyan-400 font-mono">21 CFR Part 11</span>
+                    <span className="text-slate-200 font-mono font-semibold uppercase">{activeProviderName}</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-900 space-y-1.5">
+                  <button
+                    onClick={() => {
+                      onSelectTab('ADMIN');
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition flex items-center justify-between font-semibold"
+                  >
+                    <span className="flex items-center space-x-2">
+                      <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Orgs, Users &amp; RBAC</span>
+                    </span>
+                    <span className="text-[10px]">➔</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       onOpenAIControl();
@@ -230,6 +256,7 @@ export default function Header({
                     <Key className="w-3.5 h-3.5 text-purple-400" />
                     <span>Manage API Keys</span>
                   </button>
+
                   <a
                     href="https://github.com/redahafez/HorusAgent-AI"
                     target="_blank"

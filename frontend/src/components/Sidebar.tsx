@@ -3,10 +3,11 @@
 import React from 'react';
 import {
   LayoutDashboard, GitBranch, Users, BarChart2, ShieldCheck,
-  Network, Settings, Smartphone, ExternalLink, ChevronRight, Check, X
+  Network, Settings, Smartphone, ExternalLink, ChevronRight, Check, X,
+  Building2
 } from 'lucide-react';
 
-export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'SETTINGS';
+export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'ADMIN' | 'SETTINGS';
 
 interface SidebarProps {
   activeTab: NavTabType;
@@ -55,6 +56,12 @@ export default function Sidebar({
       label: 'Approvals',
       icon: ShieldCheck,
       badge: `${approvalCount}`
+    },
+    {
+      id: 'ADMIN' as NavTabType,
+      label: 'Orgs & Users',
+      icon: Building2,
+      badge: 'Reda Hafez'
     },
     {
       id: 'SETTINGS' as NavTabType,

@@ -133,3 +133,9 @@ class HorusClient:
             resp.raise_for_status()
             return resp.json()
 
+    def get_admin_overview(self) -> Dict[str, Any]:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(f"{self.base_url}/api/v1/admin/overview")
+            resp.raise_for_status()
+            return resp.json()
+

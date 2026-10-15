@@ -14,7 +14,9 @@ from .display import (
     RESET,
     CYAN,
     GREEN,
-    YELLOW
+    YELLOW,
+    WHITE,
+    RED
 )
 
 @click.group()
@@ -393,6 +395,82 @@ def router_cmd(ctx):
         print_table("Frontier & Sovereign Model Benchmark Matrix", model_headers, model_rows)
     except Exception as e:
         print_error(f"Failed to fetch model router data: {e}")
+        sys.exit(1)
+
+@cli.group("admin")
+def admin_group():
+    """Manage Organizations, Workspaces, Users & RBAC (Reda Hafez Super Admin Authority)."""
+    pass
+
+@admin_group.command("overview")
+@click.pass_context
+def admin_overview_cmd(ctx):
+    """Display governance summary, highlighting Super Admin Reda Hafez and system statistics."""
+    client: HorusClient = ctx.obj["client"]
+    print_banner()
+    try:
+        data = client.get_admin_overview()
+        sa = data.get("super_admin", {})
+        stats = data.get("stats", {})
+
+        print_header("PLATFORM SUPER ADMIN & CHIEF ARCHITECT")
+        print(f"  {BOLD}{CYAN}👑 Super Admin:{RESET} {BOLD}{WHITE}{sa.get('name')}{RESET} ({sa.get('email')})")
+        print(f"  {BOLD}{CYAN}Title:{RESET} {sa.get('title')}")
+        print(f"  {BOLD}{CYAN}Authority:{RESET} {GREEN}{sa.get('authority')}{RESET}")
+        print(f"  {BOLD}{CYAN}Digital Signature:{RESET} {sa.get('digital_signature')}")
+        print(f"  {BOLD}{CYAN}Security Protocol:{RESET} {sa.get('mfa')}")
+        print()
+
+        headers = ["Governance Dimension", "Operational Metric", "Compliance Status"]
+        rows = [
+            ["Total Organizations", f"{stats.get('total_tenants')} Tenants", "Air-Gapped & Multi-Tenant"],
+            ["Active Workspaces", f"{stats.get('total_workspaces')} Environments", "Strict Process Isolation"],
+            ["Total Provisioned Users", f"{stats.get('total_users')} Accounts", "80% MFA Protected"],
+            ["Audit Standard", "FDA 21 CFR Part 11 & SOC 2", "ALCOA+ Non-Repudiation Sealed"]
+        ]
+        print_table("Enterprise Governance Key Statistics", headers, rows)
+    except Exception as e:
+        print_error(f"Failed to fetch admin overview: {e}")
+        sys.exit(1)
+
+@admin_group.command("users")
+@click.pass_context
+def admin_users_cmd(ctx):
+    """List all enterprise users with roles and status, featuring Super Admin Reda Hafez."""
+    client: HorusClient = ctx.obj["client"]
+    try:
+        data = client.get_admin_overview()
+        users = data.get("users", [])
+        headers = ["Member Identity", "Email", "Assigned Role", "MFA Security", "Account Status"]
+        rows = []
+        for u in users:
+            is_super = u.get("is_super_admin") or u.get("id") == "usr-reda-hafez"
+            name_str = f"{BOLD}{YELLOW}👑 {u.get('name')}{RESET}" if is_super else u.get("name", "")
+            role_str = f"{BOLD}{CYAN}{u.get('role')}{RESET}" if is_super else u.get("role", "")
+            mfa_str = f"{GREEN}✓ Verified{RESET}" if u.get("mfa_enabled") else f"{YELLOW}Pending{RESET}"
+            status_str = f"{GREEN}ACTIVE{RESET}" if u.get("status") == "ACTIVE" else f"{RED}SUSPENDED{RESET}"
+            rows.append([name_str, u.get("email", ""), role_str, mfa_str, status_str])
+        print_table("HorusAgent AI Enterprise User Directory", headers, rows)
+    except Exception as e:
+        print_error(f"Failed to fetch users: {e}")
+        sys.exit(1)
+
+@admin_group.command("orgs")
+@click.pass_context
+def admin_orgs_cmd(ctx):
+    """List all organization tenants, compliance frameworks, and data sovereignty."""
+    client: HorusClient = ctx.obj["client"]
+    try:
+        data = client.get_admin_overview()
+        tenants = data.get("tenants", [])
+        headers = ["Organization Name", "Slug", "Tier", "Data Sovereignty", "Members", "Workspaces"]
+        rows = [
+            [t.get("name"), t.get("slug"), t.get("tier"), t.get("data_sovereignty"), str(t.get("members_count")), str(t.get("workspaces_count"))]
+            for t in tenants
+        ]
+        print_table("Enterprise Sovereign Tenants", headers, rows)
+    except Exception as e:
+        print_error(f"Failed to fetch organizations: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

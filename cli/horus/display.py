@@ -22,6 +22,7 @@ YELLOW = "\033[93m"
 RED = "\033[91m"
 MAGENTA = "\033[95m"
 BOLD = "\033[1m"
+WHITE = "\033[97m"
 DIM = "\033[2m"
 RESET = "\033[0m"
 

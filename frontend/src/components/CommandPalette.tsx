@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, GitBranch, Network, BarChart2, ShieldCheck, Settings,
-  Zap, Database, FileText, ArrowRight, X, Sparkles
+  Zap, Database, FileText, ArrowRight, X, Sparkles, Building2
 } from 'lucide-react';
 import { NavTabType } from './Sidebar';
 
@@ -96,6 +96,18 @@ export default function CommandPalette({
         onClose();
       },
       badge: '3 Pending'
+    },
+    {
+      id: 'cmd-admin',
+      category: 'NAVIGATION',
+      title: 'Organizations & Users - Reda Hafez Sovereign Authority',
+      subtitle: 'Multi-tenant boundaries, isolated workspaces, member roles & RBAC matrix',
+      icon: Building2,
+      action: () => {
+        onSelectTab('ADMIN');
+        onClose();
+      },
+      badge: 'Reda Hafez'
     },
     {
       id: 'cmd-settings',

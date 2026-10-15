@@ -14,6 +14,7 @@ import CommandCenterHub from '@/components/CommandCenterHub';
 import RAGObservabilityDashboard from '@/components/RAGObservabilityDashboard';
 import OpenRouterHub from '@/components/OpenRouterHub';
 import ApprovalsHub from '@/components/ApprovalsHub';
+import AdminGovernanceHub from '@/components/AdminGovernanceHub';
 
 const INITIAL_NODES: AgentNodeState[] = [
   {
@@ -423,6 +424,11 @@ export default function Home() {
           {/* TAB 5: APPROVALS (Human-in-the-Loop 21 CFR Part 11 Governance) */}
           {activeNavTab === 'APPROVALS' && (
             <ApprovalsHub />
+          )}
+
+          {/* TAB 6: ADMIN (Organizations, Users, Roles & Workspaces - Highlight Reda Hafez) */}
+          {activeNavTab === 'ADMIN' && (
+            <AdminGovernanceHub />
           )}
 
           {/* TAB 6: SETTINGS (AI Providers & API Keys) */}
