@@ -144,6 +144,7 @@ async def update_approval_status(req: ApprovalActionRequest):
 
 
 @router.get("/rag-telemetry")
+@router.get("/telemetry")
 async def get_rag_observability_telemetry():
     """
     Returns end-to-end RAG Observability & Operations telemetry (RAG Dashboard Reference).

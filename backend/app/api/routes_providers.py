@@ -164,6 +164,7 @@ async def get_provider_analytics():
     return provider_manager.get_analytics()
 
 @router.get("/router-overview")
+@router.get("/openrouter")
 async def get_router_overview():
     """
     Returns model benchmarks, cost comparison, fallback chain,
