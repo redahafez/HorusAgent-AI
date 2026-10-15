@@ -63,6 +63,8 @@ export default function Home() {
   const [latencyMs, setLatencyMs] = useState(0);
   const [verificationScore, setVerificationScore] = useState(0);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [executionTrace, setExecutionTrace] = useState<any[]>([]);
+  const [sandboxReport, setSandboxReport] = useState<any>(null);
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
   const [isAIControlOpen, setIsAIControlOpen] = useState(false);
   const [activeProviderName, setActiveProviderName] = useState('SOVEREIGN');
@@ -206,6 +208,8 @@ export default function Home() {
           setTotalTokens(msg.data.total_tokens || 0);
           setLatencyMs(msg.data.total_latency_ms || 0);
           setVerificationScore(msg.data.verification_score || 96.0);
+          setExecutionTrace(msg.data.execution_trace || []);
+          setSandboxReport(msg.data.sandbox_report || null);
         }
         break;
     }
@@ -222,6 +226,8 @@ export default function Home() {
     setFinalDeliverable('');
     setCitations([]);
     setCriticCritique('');
+    setExecutionTrace([]);
+    setSandboxReport(null);
     setNodes((prev) => prev.map((n) => ({ ...n, state: 'IDLE', latencyMs: 0 })));
 
     // Send via WebSocket if connected
@@ -251,6 +257,8 @@ export default function Home() {
         setFinalDeliverable(data.final_output);
         setStreamedText(data.final_output);
         setCitations(data.citations || []);
+        setExecutionTrace(data.execution_trace || []);
+        setSandboxReport(data.sandbox_report || null);
         setTotalTokens(data.total_tokens || 0);
         setLatencyMs(data.total_latency_ms || 0);
         setVerificationScore(data.verification_score || 96.0);
@@ -269,6 +277,40 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content, category }),
+      });
+      if (res.ok) {
+        loadDocuments();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleUploadFile = async (file: File, category: string) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+      const res = await fetch('/api/v1/rag/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        loadDocuments();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleDeleteDocument = async (chunkId: string) => {
+    try {
+      const res = await fetch(`/api/v1/rag/documents/${chunkId}`, {
+        method: 'DELETE',
       });
       if (res.ok) {
         loadDocuments();
@@ -323,6 +365,8 @@ export default function Home() {
           citations={citations}
           criticCritique={criticCritique}
           isStreaming={isStreaming}
+          executionTrace={executionTrace}
+          sandboxReport={sandboxReport}
         />
       </main>
 
@@ -345,6 +389,8 @@ export default function Home() {
         onClose={() => setIsKnowledgeOpen(false)}
         documents={documents}
         onIngestDocument={handleIngestDocument}
+        onUploadFile={handleUploadFile}
+        onDeleteDocument={handleDeleteDocument}
       />
 
       {/* 5. AI Models & API Keys Enterprise Control Panel */}

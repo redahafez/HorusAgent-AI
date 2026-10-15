@@ -9,6 +9,7 @@ import hashlib
 from datetime import datetime, timezone
 from ..agents.models import MissionRequest, MissionResult
 from ..agents.engine import swarm_engine
+from ..agents.store import mission_store
 
 router = APIRouter(prefix="/missions", tags=["Missions"])
 
@@ -52,6 +53,26 @@ class ExportZipRequest(BaseModel):
     verification_score: Optional[float] = 0.98
     execution_time_ms: Optional[int] = 1200
 
+
+@router.get("")
+async def list_executed_missions(limit: int = 20):
+    """
+    Returns durable history of executed missions with execution traces and verification status.
+    """
+    return {
+        "total_missions": mission_store.count(),
+        "missions": mission_store.list_missions(limit=limit)
+    }
+
+@router.get("/detail/{mission_id}", response_model=MissionResult)
+async def get_mission_detail(mission_id: str):
+    """
+    Retrieves complete mission execution graph, AST verification, sandbox outcomes, and deliverable.
+    """
+    mission = mission_store.get_mission(mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail=f"Mission {mission_id} not found in durable store")
+    return mission
 
 @router.get("/presets")
 async def get_preset_missions():

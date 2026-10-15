@@ -62,6 +62,15 @@ class StreamEvent(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=utc_now)
 
+class ExecutionTraceStep(BaseModel):
+    step_id: str
+    agent: AgentRole
+    tool_or_action: str
+    duration_ms: int
+    status: str = "COMPLETED"
+    details: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: datetime = Field(default_factory=utc_now)
+
 class MissionRequest(BaseModel):
     objective: str
     domain: str = "CLOUD_ARCH" # CLOUD_ARCH | CLINICAL_RAG | MICROSERVICES | SECURITY_AUDIT
@@ -77,6 +86,8 @@ class MissionResult(BaseModel):
     dag_nodes: List[DAGNode]
     final_output: str
     citations: List[KnowledgeCitation] = Field(default_factory=list)
+    execution_trace: List[ExecutionTraceStep] = Field(default_factory=list)
+    sandbox_report: Optional[Dict[str, Any]] = None
     total_tokens: int
     total_latency_ms: int
     verification_score: float # 0.0 - 100.0%

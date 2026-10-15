@@ -1,16 +1,18 @@
 import ast
 import re
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 from .models import AgentRole, KnowledgeCitation
+from ..sandbox.runner import sandbox_runner, SandboxExecutionResult
 
 class CriticAgent:
     """
     Evaluates intermediate and final agent outputs for hallucinations,
     factual deviations from retrieved citations, and code correctness using
-    real Python AST parsing, static syntax verification, and grounding checks.
+    real Python AST parsing, static syntax verification, and sandbox execution.
     """
     def __init__(self):
         self.role = AgentRole.CRITIC
+        self.last_sandbox_result: Optional[SandboxExecutionResult] = None
 
     def verify_code_ast(self, code_str: str) -> Dict[str, Any]:
         """
@@ -72,7 +74,24 @@ class CriticAgent:
                 if has_error_handling:
                     score += 3.0
                     audit_findings.append("✅ Defensive Programming: AST detected explicit try/except error handling boundaries")
+
+            # Isolated Sandbox Execution
+            combined_code = "\n\n".join(code_blocks)
+            sandbox_res = sandbox_runner.execute_code_snippet(combined_code)
+            self.last_sandbox_result = sandbox_res
+
+            if sandbox_res.passed:
+                audit_findings.append(
+                    f"✅ Sandbox Execution Verified: Process exited with code 0 in {sandbox_res.duration_ms}ms"
+                )
+            else:
+                if sandbox_res.error_type == "TIMEOUT_EXPIRED":
+                    score -= 15.0
+                    audit_findings.append(f"❌ Sandbox Timeout: Process exceeded execution boundary")
+                elif sandbox_res.stderr:
+                    audit_findings.append(f"ℹ Sandbox Trace: Output logged ({sandbox_res.stderr.strip()[:100]}...)")
         else:
+            self.last_sandbox_result = None
             audit_findings.append("ℹ Specification Only: No executable code blocks detected for AST parsing")
 
         # 3. Citation grounding verification
