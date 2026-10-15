@@ -120,10 +120,13 @@ class CodeSandboxRunner:
             with open(src_path, "w", encoding="utf-8") as f:
                 f.write(code)
 
-            # 2. Write test module
+            # 2. Write test module (auto-inject service import if omitted)
             test_path = os.path.join(tmpdir, "test_service.py")
+            test_code_to_write = test_code
+            if "from service import" not in test_code and "import service" not in test_code:
+                test_code_to_write = "import sys, os\nsys.path.insert(0, os.path.dirname(__file__))\nfrom service import *\n\n" + test_code
             with open(test_path, "w", encoding="utf-8") as f:
-                f.write(test_code)
+                f.write(test_code_to_write)
 
             try:
                 env = {

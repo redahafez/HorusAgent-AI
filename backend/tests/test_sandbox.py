@@ -83,3 +83,20 @@ def test_mission_store_persistence():
     
     listing = mission_store.list_missions()
     assert any(m["mission_id"] == "msn-test-sandbox-001" for m in listing)
+
+def test_sandbox_run_endpoint():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    
+    payload = {
+        "code": "print('Horus Sandbox Executed Successfully')\nx = 42\nassert x == 42",
+        "timeout_sec": 3.0
+    }
+    res = client.post("/api/v1/missions/sandbox-run", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["passed"] is True
+    assert data["exit_code"] == 0
+    assert "Horus Sandbox Executed Successfully" in data["stdout"]
+

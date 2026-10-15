@@ -424,3 +424,33 @@ bmExFDASBgNVBAoMC0hvcnVzQWdlbnQxMS8wLQYDVQQDDCdIb3J1c0FnZW50LUFJ
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate project ZIP: {str(e)}")
 
+
+class SandboxRunRequest(BaseModel):
+    code: str
+    test_code: Optional[str] = None
+    timeout_sec: Optional[float] = 5.0
+
+
+@router.post("/sandbox-run")
+async def run_code_in_sandbox(req: SandboxRunRequest):
+    """
+    Executes Python code or pytest test suite in isolated subprocess sandbox.
+    """
+    from ..sandbox.runner import sandbox_runner
+    if req.test_code:
+        result = sandbox_runner.execute_code_with_tests(req.code, req.test_code, timeout_sec=req.timeout_sec)
+    else:
+        result = sandbox_runner.execute_code_snippet(req.code, timeout_sec=req.timeout_sec)
+
+    return {
+        "passed": result.passed,
+        "exit_code": result.exit_code,
+        "duration_ms": result.duration_ms,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "tests_passed": result.tests_passed,
+        "tests_failed": result.tests_failed,
+        "error_type": result.error_type
+    }
+
+
