@@ -13,7 +13,7 @@ from .researcher import ResearchAgent
 from .architect import CodeArchitectAgent
 from .critic import CriticAgent
 from .governance import SecurityAuditorAgent
-from .store import mission_store
+from .store import mission_store, routing_telemetry
 from ..providers.manager import provider_manager, LLMProviderType
 
 class SwarmExecutionEngine:
@@ -66,6 +66,7 @@ class SwarmExecutionEngine:
                 "anti_hallucination": provider_manager.hyperparameters.anti_hallucination_level
             }
         )
+        routing_telemetry.set_active_stage("Intake")
         dag_nodes = self.orchestrator.compile_dag(request)
         await emit(StreamEventType.DAG_INITIALIZED, AgentRole.ORCHESTRATOR, data={"nodes": [n.model_dump() for n in dag_nodes]})
 
@@ -77,6 +78,7 @@ class SwarmExecutionEngine:
         verification_score = 95.0
 
         # 2. Execute Node 1: Research & Vector RAG
+        routing_telemetry.set_active_stage("Classify")
         node1 = dag_nodes[0]
         node1.state = AgentState.EXECUTING
         node1.started_at = datetime.now(timezone.utc)
@@ -96,6 +98,7 @@ class SwarmExecutionEngine:
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.RESEARCHER, node1.id, {"state": node1.state, "latency_ms": node1.latency_ms})
 
         # 3. Execute Node 2: Architect & Code Synthesis
+        routing_telemetry.set_active_stage("Review")
         node2 = dag_nodes[1]
         node2.state = AgentState.EXECUTING
         node2.started_at = datetime.now(timezone.utc)
@@ -140,6 +143,7 @@ class SwarmExecutionEngine:
         await emit(StreamEventType.AGENT_STATE_CHANGED, AgentRole.CRITIC, node3.id, {"state": node3.state, "latency_ms": node3.latency_ms})
 
         # 5. Execute Node 4: Governance & PII Sealing
+        routing_telemetry.set_active_stage("Deliver")
         node4 = dag_nodes[3]
         node4.state = AgentState.EXECUTING
         node4.started_at = datetime.now(timezone.utc)
@@ -220,6 +224,21 @@ class SwarmExecutionEngine:
 
         # Save to durable mission store
         mission_store.save_mission(result)
+
+        # Dynamic Route Telemetry update
+        chosen_path = "primary"
+        if provider_manager.global_active_provider in [LLMProviderType.ANTHROPIC, LLMProviderType.GEMINI]:
+            chosen_path = "secondary"
+        elif provider_manager.global_active_provider in [LLMProviderType.GROQ, LLMProviderType.HORUS_SOVEREIGN] or verification_score < 80.0:
+            chosen_path = "fallback"
+
+        routing_telemetry.record_mission_routing(
+            mission_id=mission_id,
+            title=request.objective,
+            agent_role="GOVERNANCE",
+            path=chosen_path
+        )
+        routing_telemetry.set_active_stage(None)
 
         # Record usage metrics in ProviderManager
         provider_manager.record_usage(active_model, tokens_in=total_tokens // 2, tokens_out=total_tokens // 2)

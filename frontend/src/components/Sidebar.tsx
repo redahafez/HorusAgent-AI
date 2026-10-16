@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   LayoutDashboard, GitBranch, Users, BarChart2, ShieldCheck,
-  Network, Settings, Smartphone, ExternalLink, ChevronRight, Check, X,
+  Network, Settings, ExternalLink, ChevronRight, Check, X,
   Building2, LogOut, Lock, ShieldAlert, Layers
 } from 'lucide-react';
 
@@ -218,19 +218,6 @@ export default function Sidebar({
           </a>
         </div>
 
-        {/* ModelOps Mobile Card */}
-        <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-950/40 to-slate-900/80 border border-indigo-500/20 text-xs flex items-center justify-between group hover:border-indigo-500/40 transition">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0 group-hover:scale-105 transition">
-              <Smartphone className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="font-semibold text-white text-[11px]">ModelOps Mobile</div>
-              <div className="text-[9px] text-slate-400">Monitor workflows</div>
-            </div>
-          </div>
-          <span className="text-[10px] text-indigo-400 font-bold group-hover:translate-x-0.5 transition">➔</span>
-        </div>
       </div>
     </div>
   );

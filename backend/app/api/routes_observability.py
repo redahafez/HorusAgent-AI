@@ -1,3 +1,5 @@
+import uuid
+from ..agents.store import routing_telemetry
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
@@ -70,17 +72,7 @@ async def get_command_center_overview():
             "active_agents": 18,
             "active_agents_trend": "+2 vs last week"
         },
-        "workflow_routing_map": {
-            "stages": ["Intake", "Classify", "Review", "Fallback", "Deliver"],
-            "primary_path_pct": 68,
-            "secondary_path_pct": 22,
-            "fallback_path_pct": 10,
-            "flow_rates": {
-                "intake_to_classify": {"primary": 68, "secondary": 22, "fallback": 10},
-                "classify_to_review": {"approved": 72, "diverted": 18, "unresolved": 10},
-                "review_to_deliver": {"verified": 91, "fallback_trigger": 46, "unmatched": 63}
-            }
-        },
+        "workflow_routing_map": routing_telemetry.get_metrics(),
         "approval_queue": approval_queue_state,
         "cost_pulse": {
             "total_spend": 48320.0,
@@ -315,3 +307,37 @@ async def resolve_system_alert(req: AlertResolutionRequest):
         "message": f"Alert {req.alert_id} resolved. Policy '{req.action_taken}' enforced on agent swarm."
     }
 
+
+
+class TriggerRouteEventRequest(BaseModel):
+    path: Optional[str] = "primary" # "primary" | "secondary" | "fallback"
+    title: Optional[str] = "Live Swarm Task Dispatch"
+    agent: Optional[str] = "ORCHESTRATOR"
+
+@router.get("/routing-map")
+async def get_live_routing_map():
+    """
+    Returns real-time workflow routing telemetry, live node traffic share,
+    active stage pulses, and mission execution counts.
+    """
+    return routing_telemetry.get_metrics()
+
+@router.post("/routing-map/trigger-event")
+async def trigger_routing_event(req: TriggerRouteEventRequest):
+    """
+    Triggers a live routing event into the telemetry tracker,
+    updating percentages and activating a stage pulse in real time.
+    """
+    mission_id = f"mission-{uuid.uuid4().hex[:8]}"
+    routing_telemetry.record_mission_routing(
+        mission_id=mission_id,
+        title=req.title or "Live Swarm Task Dispatch",
+        agent_role=req.agent or "ORCHESTRATOR",
+        path=req.path or "primary"
+    )
+    return {
+        "success": True,
+        "mission_id": mission_id,
+        "path_routed": req.path,
+        "metrics": routing_telemetry.get_metrics()
+    }

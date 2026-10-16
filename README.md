@@ -53,33 +53,51 @@ In ancient Egyptian mythology, the **Eye of Horus (Wedjat)** was venerated as th
 
 ## 📸 Visual Showcase & Interface Tour
 
-### 1. Operations Command Center & Multi-Agent Workspace
-Real-time KPI metrics, active domain filtering, autonomous swarm topology, and live streaming console.
+### 1. Operations Command Center & AI Workflow Overview
+Real-time KPI telemetry, automated agent health sparklines, cost pulse analytics, and active multi-agent pipeline status.
 ![Horus Platform Overview](docs/screenshots/01-horus-platform-overview.png)
 
 ---
 
-### 2. Live Dynamic Directed Acyclic Graph (DAG) Execution
-Asynchronous agent state transitions (`THINKING`, `EXECUTING`, `REFLECTING`, `VERIFIED`, `COMPLETED`) with token-by-token streaming.
-![Live Swarm Execution](docs/screenshots/02-live-swarm-execution.png)
+### 2. Interactive Workflow Routing Map & Live Telemetry Pulse
+Fluid Sankey wave ribbons mapping dynamic traffic across 5 stages (`Intake ➔ Classify ➔ Review ➔ Fallback ➔ Deliver`). Real-time live polling, mission counters, and automated failover circuits.
+![Workflow Routing Map](docs/screenshots/02-workflow-routing-map.png)
 
 ---
 
-### 3. Sealed Deliverable with SHA-256 Regulatory Audit Seal
-Final synthesized architectural and software solution with syntax-highlighted code and cryptographic integrity signature.
-![Sealed Deliverable](docs/screenshots/03-sealed-deliverable-audit.png)
+### 3. Interactive Visual Workflow & Agent DAG Canvas Studio
+Visual drag-and-drop workspace studio with Kahn topological cycle validation, node dependency linking, and real-time swarm execution streaming.
+![Visual DAG Canvas Studio](docs/screenshots/03-visual-dag-canvas-studio.png)
 
 ---
 
-### 4. Critic Anti-Hallucination & Self-Reflection Report
-Multi-turn verification loop scoring confidence against retrieved knowledge citations.
-![Critic Anti-Hallucination](docs/screenshots/04-critic-anti-hallucination.png)
+### 4. Multi-LLM Model Router & Cost / Latency Matrix
+Dynamic routing gateway with real-time failover triggers across OpenAI, Anthropic Claude 3.5, Groq, Google Gemini, and Sovereign local models.
+![Model Router Matrix](docs/screenshots/04-model-router-matrix.png)
 
 ---
 
-### 5. In-Memory Vector RAG Knowledge Explorer
-Browse 128-dimensional indexed enterprise chunks, test semantic similarity search, and ingest custom documentation.
-![Vector RAG Explorer](docs/screenshots/05-vector-rag-explorer.png)
+### 5. Vector RAG Observability & Semantic Drift Dashboard
+Real-time Cosine similarity tracking, vector embeddings cluster health, retrieval evaluation (nDCG@10), and knowledge graph connectivity.
+![Vector RAG Observability](docs/screenshots/05-vector-rag-observability.png)
+
+---
+
+### 6. Human-in-the-Loop Governance & Approvals Hub
+Enterprise human-in-the-loop audit queue with threshold enforcement, vendor agreement validations, and cryptographic approval logging.
+![Approvals Governance Hub](docs/screenshots/06-approvals-governance-hub.png)
+
+---
+
+### 7. Enterprise Governance, RBAC & Multi-Tenant Administration
+Role-based access controls, organization spaces, active security policies, and team membership management architected by **Reda Hafez**.
+![Enterprise Governance Admin](docs/screenshots/07-enterprise-governance-admin.png)
+
+---
+
+### 8. Live Swarm Mission Dispatch & Execution Stream
+Live swarm mission dispatch showing token-by-token streaming, self-reflection feedback loops, and automated sandbox validation.
+![Live Swarm Mission Dispatch](docs/screenshots/08-live-swarm-mission-dispatch.png)
 
 ---
 
