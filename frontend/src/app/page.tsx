@@ -93,7 +93,9 @@ export default function Home() {
       const savedUser = localStorage.getItem('horus_user');
       if (savedUser) {
         try {
-          return JSON.parse(savedUser);
+          const parsed = JSON.parse(savedUser);
+          if (!parsed.photo) parsed.photo = '/reda_hafez_avatar.jpg';
+          return parsed;
         } catch {}
       }
     }
@@ -102,6 +104,7 @@ export default function Home() {
       name: "Reda Hafez",
       email: "reda.hafez@horusagent.ai",
       avatar: "RH",
+      photo: "/reda_hafez_avatar.jpg",
       role: "SUPER_ADMIN",
       role_title: "Platform Super Admin & Chief Architect",
       is_super_admin: true,
@@ -109,6 +112,13 @@ export default function Home() {
       tenant_name: "Horus Core Systems",
     };
   });
+
+  const handleUpdateUser = (updatedUser: any) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('horus_user', JSON.stringify(updatedUser));
+    }
+    setCurrentUser(updatedUser);
+  };
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -401,6 +411,7 @@ export default function Home() {
         currentUser={currentUser}
         onOpenLogin={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
+        onUpdateUser={handleUpdateUser}
       />
 
       {/* 2. Main Content Viewport */}
@@ -423,6 +434,7 @@ export default function Home() {
           currentUser={currentUser}
           onOpenLogin={() => setIsAuthModalOpen(true)}
           onLogout={handleLogout}
+          onUpdateUser={handleUpdateUser}
         />
 
         {/* Viewport Content */}
@@ -552,7 +564,7 @@ export default function Home() {
 
           {/* TAB 6: ADMIN (Organizations, Users, Roles & Workspaces - Highlight Reda Hafez) */}
           {activeNavTab === 'ADMIN' && (
-            <AdminGovernanceHub />
+            <AdminGovernanceHub currentUser={currentUser} onUpdateUser={handleUpdateUser} />
           )}
 
           {/* TAB 6: SETTINGS (AI Providers & API Keys) */}

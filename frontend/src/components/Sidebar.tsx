@@ -4,7 +4,7 @@ import React from 'react';
 import {
   LayoutDashboard, GitBranch, Users, BarChart2, ShieldCheck,
   Network, Settings, ExternalLink, ChevronRight, Check, X,
-  Building2, LogOut, Lock, ShieldAlert, Layers
+  Building2, LogOut, Camera, Lock, ShieldAlert, Layers
 } from 'lucide-react';
 
 export type NavTabType = 'OVERVIEW' | 'WORKFLOWS' | 'STUDIO' | 'ROUTER' | 'ANALYTICS' | 'APPROVALS' | 'ADMIN' | 'SETTINGS';
@@ -19,6 +19,7 @@ interface SidebarProps {
   currentUser?: any;
   onOpenLogin?: () => void;
   onLogout?: () => void;
+  onUpdateUser?: (user: any) => void;
 }
 
 export default function Sidebar({
@@ -30,7 +31,8 @@ export default function Sidebar({
   onCloseMobile,
   currentUser,
   onOpenLogin,
-  onLogout
+  onLogout,
+  onUpdateUser
 }: SidebarProps) {
   const navItems = [
     {
@@ -167,8 +169,17 @@ export default function Sidebar({
         {currentUser ? (
           <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950/30 border border-slate-800 flex items-center justify-between shadow-inner">
             <div className="flex items-center space-x-2.5 truncate">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-sm">
-                {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
+              <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25">
+                <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center">
+                  <img
+                    src={currentUser.photo || '/reda_hafez_avatar.jpg'}
+                    alt={currentUser.name}
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      (e.target as any).style.display = 'none';
+                    }}
+                  />
+                </div>
               </div>
               <div className="truncate text-left">
                 <div className="text-xs font-bold text-white truncate flex items-center space-x-1">

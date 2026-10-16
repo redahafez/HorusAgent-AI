@@ -5,7 +5,7 @@ import {
   Search, Bell, ChevronDown, ArrowRight, Menu, ShieldCheck,
   CheckCircle2, AlertTriangle, AlertCircle, Sparkles, Terminal,
   LayoutDashboard, Database, Key, ExternalLink, Github, Building2, Award,
-  LogOut, Lock, User
+  LogOut, Lock, User, Camera, Upload, Check, RefreshCw
 } from 'lucide-react';
 import { NavTabType } from './Sidebar';
 
@@ -23,6 +23,7 @@ interface HeaderProps {
   currentUser?: any;
   onOpenLogin?: () => void;
   onLogout?: () => void;
+  onUpdateUser?: (user: any) => void;
 }
 
 export default function Header({
@@ -38,12 +39,18 @@ export default function Header({
   onOpenSearchPalette,
   currentUser,
   onOpenLogin,
-  onLogout
+  onLogout,
+  onUpdateUser
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [customPhotoUrl, setCustomPhotoUrl] = useState('');
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Close popovers on click outside
   useEffect(() => {
@@ -53,14 +60,72 @@ export default function Header({
       }
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setShowProfileMenu(false);
+        setShowUrlInput(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Handle local image file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (PNG, JPG, WEBP, GIF).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const updated = { ...(currentUser || {}), photo: dataUrl };
+      if (onUpdateUser) {
+        onUpdateUser(updated);
+      }
+      setUploadStatus('Photo updated successfully!');
+      setTimeout(() => setUploadStatus(null), 3000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle applying image URL
+  const handleApplyUrl = () => {
+    if (!customPhotoUrl.trim()) return;
+    const updated = { ...(currentUser || {}), photo: customPhotoUrl.trim() };
+    if (onUpdateUser) {
+      onUpdateUser(updated);
+    }
+    setCustomPhotoUrl('');
+    setShowUrlInput(false);
+    setUploadStatus('Profile image applied from URL!');
+    setTimeout(() => setUploadStatus(null), 3000);
+  };
+
+  // Reset to default executive portrait
+  const handleResetPhoto = () => {
+    const updated = { ...(currentUser || {}), photo: '/reda_hafez_avatar.jpg' };
+    if (onUpdateUser) {
+      onUpdateUser(updated);
+    }
+    setUploadStatus('Reset to executive portrait.');
+    setTimeout(() => setUploadStatus(null), 3000);
+  };
+
+  const userPhoto = currentUser?.photo || '/reda_hafez_avatar.jpg';
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-6 py-2.5">
+    <header className="sticky top-0 z-40 w-full bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-6 py-2">
+      {/* Hidden File Input for Image Upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept="image/*"
+        className="hidden"
+      />
+
       <div className="flex items-center justify-between gap-3 max-w-[1600px] mx-auto">
         {/* Left: Mobile Hamburger & Search Input */}
         <div className="flex items-center space-x-3 flex-1 max-w-xl">
@@ -88,7 +153,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right: Telemetry pill, Bell, User profile, and Glowing CTA */}
+        {/* Right: Telemetry pill, Bell, and User Profile with Open Console underneath */}
         <div className="flex items-center space-x-3 flex-shrink-0">
           {/* Live Status Pill */}
           <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
@@ -176,139 +241,247 @@ export default function Header({
             )}
           </div>
 
-          {/* User Profile Pill & Auth Actions */}
+          {/* User Profile Container & Stacked Open Console (Directly underneath name & photo) */}
           {currentUser ? (
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10"
-              >
-                {/* Profile Avatar */}
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-sm shadow-cyan-500/30">
-                  <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center text-[11px] font-bold text-cyan-300">
-                    {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
-                  </div>
-                </div>
-                <div className="hidden md:block">
-                  <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
-                    <span>{currentUser.name}</span>
-                    <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
-                      {currentUser.is_super_admin ? 'ROOT' : currentUser.role?.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="text-[9px] text-cyan-400 font-mono leading-tight">
-                    {currentUser.role_title || 'Authenticated Session'}
-                  </div>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
-              </button>
-
-              {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-76 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
-                  <div className="flex items-center space-x-3 pb-3 border-b border-slate-800 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md">
-                      <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-bold text-xs text-cyan-300">
-                        {currentUser.avatar || (currentUser.name ? currentUser.name.slice(0, 2).toUpperCase() : 'RH')}
+            <div className="flex flex-col items-end space-y-1.5 flex-shrink-0">
+              {/* Row 1: User Profile Pill with Circular Avatar and Colorful Glowing Ring */}
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-2.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10 group"
+                  title="Account identity & profile settings"
+                >
+                  {/* Profile Avatar: Circular with Vibrant Colorful Gradient Ring */}
+                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25 group-hover:scale-105 transition-transform">
+                    <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
+                      <img
+                        src={userPhoto}
+                        alt={currentUser.name}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          (e.target as any).src = '/reda_hafez_avatar.jpg';
+                        }}
+                      />
+                      {/* Subtle camera icon on hover */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                        <Camera className="w-3.5 h-3.5 text-cyan-300" />
                       </div>
                     </div>
-                    <div className="truncate">
-                      <div className="font-bold text-white flex items-center space-x-1.5 truncate">
-                        <span className="truncate">{currentUser.name}</span>
+                  </div>
+
+                  <div className="hidden md:block">
+                    <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
+                      <span>{currentUser.name}</span>
+                      <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+                        {currentUser.is_super_admin ? 'ROOT' : currentUser.role?.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-[9px] text-cyan-400 font-mono leading-tight">
+                      {currentUser.role_title || 'Platform Super Admin & Chief Architect'}
+                    </div>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-4 text-xs z-50 animate-fadeIn">
+                    {/* Header with Circular Avatar & Upload Trigger */}
+                    <div className="flex flex-col items-center text-center pb-3 border-b border-slate-800 mb-3">
+                      <div 
+                        className="relative group cursor-pointer mb-2"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Click to upload/change photo"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2.5px] shadow-xl shadow-cyan-500/30 group-hover:scale-105 transition-transform">
+                          <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
+                            <img
+                              src={userPhoto}
+                              alt={currentUser.name}
+                              className="w-full h-full object-cover rounded-full"
+                              onError={(e) => {
+                                (e.target as any).src = '/reda_hafez_avatar.jpg';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-full text-white">
+                              <Camera className="w-4 h-4 text-cyan-300 mb-0.5" />
+                              <span className="text-[8px] font-bold text-cyan-200">Upload</span>
+                            </div>
+                          </div>
+                        </div>
                         {currentUser.is_super_admin && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-400 text-slate-950">
+                          <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full font-mono text-[8px] font-bold bg-amber-400 text-slate-950 shadow-md">
                             ROOT
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-cyan-400 font-mono truncate">{currentUser.email}</div>
+
+                      <div className="font-bold text-sm text-white">{currentUser.name}</div>
+                      <div className="text-[10px] text-cyan-400 font-mono mb-2">{currentUser.email}</div>
+
+                      {/* Photo Upload & Change Actions */}
+                      <div className="flex items-center space-x-1.5 w-full justify-center">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>Upload Photo</span>
+                        </button>
+                        <button
+                          onClick={() => setShowUrlInput(!showUrlInput)}
+                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-[10px] font-semibold transition"
+                        >
+                          <Upload className="w-3 h-3" />
+                          <span>Photo URL</span>
+                        </button>
+                      </div>
+
+                      {/* Inline Image URL Input */}
+                      {showUrlInput && (
+                        <div className="mt-2.5 w-full flex items-center space-x-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                          <input
+                            type="text"
+                            value={customPhotoUrl}
+                            onChange={(e) => setCustomPhotoUrl(e.target.value)}
+                            placeholder="https://example.com/avatar.jpg"
+                            className="flex-1 bg-transparent text-[10px] text-white focus:outline-none px-1"
+                          />
+                          <button
+                            onClick={handleApplyUrl}
+                            className="px-2 py-0.5 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] transition"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Reset to executive portrait option */}
+                      {currentUser?.photo && currentUser.photo !== '/reda_hafez_avatar.jpg' && (
+                        <button
+                          onClick={handleResetPhoto}
+                          className="mt-1.5 text-[9px] text-slate-400 hover:text-amber-300 underline font-mono transition"
+                        >
+                          Reset to Executive Portrait
+                        </button>
+                      )}
+
+                      {uploadStatus && (
+                        <div className="mt-1.5 text-[10px] text-emerald-400 font-mono animate-fadeIn flex items-center space-x-1">
+                          <Check className="w-3 h-3" />
+                          <span>{uploadStatus}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                  <div className="space-y-1 mb-3 text-[11px]">
-                    <div className="flex items-center justify-between text-slate-400 py-0.5">
-                      <span>Role:</span>
-                      <span className="text-amber-300 font-mono font-bold">{currentUser.role_title || currentUser.role}</span>
+                    <div className="space-y-1 mb-3 text-[11px]">
+                      <div className="flex items-center justify-between text-slate-400 py-0.5">
+                        <span>Role:</span>
+                        <span className="text-amber-300 font-mono font-bold">{currentUser.role_title || currentUser.role}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-400 py-0.5">
+                        <span>Scope:</span>
+                        <span className="text-cyan-400 font-mono">{currentUser.is_super_admin ? 'Universal Root (*:*)' : 'Tenant Scoped'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-400 py-0.5">
+                        <span>MFA Status:</span>
+                        <span className="text-emerald-400 font-mono">{currentUser.mfa_enabled ? 'FIPS 140-2 Key Verified' : 'Standard Auth'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-400 py-0.5">
+                        <span>AI Engine:</span>
+                        <span className="text-slate-200 font-mono font-semibold uppercase">{activeProviderName}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400 py-0.5">
-                      <span>Scope:</span>
-                      <span className="text-cyan-400 font-mono">{currentUser.is_super_admin ? 'Universal Root (*:*)' : 'Tenant Scoped'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-400 py-0.5">
-                      <span>MFA Status:</span>
-                      <span className="text-emerald-400 font-mono">{currentUser.mfa_enabled ? 'FIPS 140-2 Key Verified' : 'Standard Auth'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-400 py-0.5">
-                      <span>AI Engine:</span>
-                      <span className="text-slate-200 font-mono font-semibold uppercase">{activeProviderName}</span>
-                    </div>
-                  </div>
 
-                  <div className="pt-2 border-t border-slate-900 space-y-1.5">
-                    <button
-                      onClick={() => {
-                        onSelectTab('ADMIN');
-                        setShowProfileMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition flex items-center justify-between font-semibold"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Orgs, Users &amp; RBAC</span>
-                      </span>
-                      <span className="text-[10px]">➔</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        onOpenAIControl();
-                        setShowProfileMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center space-x-2"
-                    >
-                      <Key className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Manage API Keys</span>
-                    </button>
-
-                    {/* Switch / Sign In Persona */}
-                    <button
-                      onClick={() => {
-                        if (onOpenLogin) onOpenLogin();
-                        setShowProfileMenu(false);
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-indigo-300 hover:text-indigo-200 transition flex items-center space-x-2"
-                    >
-                      <User className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Switch Account / Persona</span>
-                    </button>
-
-                    <a
-                      href="https://github.com/redahafez/HorusAgent-AI"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center justify-between"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <Github className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Documentation</span>
-                      </span>
-                      <ExternalLink className="w-3 h-3 text-slate-500" />
-                    </a>
-
-                    {/* Sign Out / Token Invalidation */}
-                    <div className="pt-1.5 border-t border-slate-900">
+                    <div className="pt-2 border-t border-slate-900 space-y-1.5">
                       <button
                         onClick={() => {
-                          if (onLogout) onLogout();
+                          onSelectTab('ADMIN');
                           setShowProfileMenu(false);
                         }}
-                        className="w-full text-left px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition flex items-center space-x-2 font-semibold"
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition flex items-center justify-between font-semibold"
                       >
-                        <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Sign Out (Safe Logout)</span>
+                        <span className="flex items-center space-x-2">
+                          <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Orgs, Users &amp; RBAC</span>
+                        </span>
+                        <span className="text-[10px]">➔</span>
                       </button>
+
+                      <button
+                        onClick={() => {
+                          onOpenAIControl();
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center space-x-2"
+                      >
+                        <Key className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Manage API Keys</span>
+                      </button>
+
+                      {/* Switch / Sign In Persona */}
+                      <button
+                        onClick={() => {
+                          if (onOpenLogin) onOpenLogin();
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-indigo-300 hover:text-indigo-200 transition flex items-center space-x-2"
+                      >
+                        <User className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Switch Account / Persona</span>
+                      </button>
+
+                      <a
+                        href="https://github.com/redahafez/HorusAgent-AI"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-900 text-slate-300 hover:text-white transition flex items-center justify-between"
+                      >
+                        <span className="flex items-center space-x-2">
+                          <Github className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Documentation</span>
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-slate-500" />
+                      </a>
+
+                      {/* Sign Out / Token Invalidation */}
+                      <div className="pt-1.5 border-t border-slate-900">
+                        <button
+                          onClick={() => {
+                            if (onLogout) onLogout();
+                            setShowProfileMenu(false);
+                          }}
+                          className="w-full text-left px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition flex items-center space-x-2 font-semibold"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Sign Out (Safe Logout)</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+              </div>
+
+              {/* Row 2: High-Visibility CTA Button (Placed directly underneath the user's name and photo) */}
+              {activeTab !== 'WORKFLOWS' ? (
+                <button
+                  onClick={() => onSelectTab('WORKFLOWS')}
+                  className="w-full flex items-center justify-center space-x-1.5 px-3 py-1 rounded-lg text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-200 shadow-md shadow-indigo-600/30 hover:shadow-indigo-600/50 active:scale-95 flex-shrink-0"
+                  title="Open Multi-Agent Swarm Console"
+                >
+                  <Terminal className="w-3 h-3 text-cyan-200" />
+                  <span>Open Console</span>
+                  <ArrowRight className="w-3 h-3 text-cyan-200" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => onSelectTab('OVERVIEW')}
+                  className="w-full flex items-center justify-center space-x-1.5 px-3 py-1 rounded-lg text-[11px] font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 transition-all duration-200 shadow-md shadow-purple-600/30 hover:shadow-purple-600/50 active:scale-95 flex-shrink-0"
+                  title="Return to Operations Overview"
+                >
+                  <LayoutDashboard className="w-3 h-3" />
+                  <span>Overview</span>
+                </button>
               )}
             </div>
           ) : (
@@ -318,25 +491,6 @@ export default function Header({
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Sign In</span>
-            </button>
-          )}
-
-          {/* High-Visibility CTA Button: Open Console ➔ or Overview ➔ */}
-          {activeTab !== 'WORKFLOWS' ? (
-            <button
-              onClick={() => onSelectTab('WORKFLOWS')}
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-200 shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 active:scale-95 flex-shrink-0"
-            >
-              <span>Open Console</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button
-              onClick={() => onSelectTab('OVERVIEW')}
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 transition-all duration-200 shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50 active:scale-95 flex-shrink-0"
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Overview</span>
             </button>
           )}
         </div>

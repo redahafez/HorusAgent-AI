@@ -433,13 +433,10 @@ export default function CommandCenterHub({
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={onOpenSwarm}
-            className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/20"
-          >
-            <span>Open Console</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 text-xs font-mono shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>SWARM ONLINE</span>
+          </div>
         </div>
       </div>
 

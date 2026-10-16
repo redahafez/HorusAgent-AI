@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Building2, Users, Folder, Shield, ShieldCheck, Key,
+  Building2, Users, Camera, Upload, Folder, Shield, ShieldCheck, Key,
   CheckCircle2, XCircle, Plus, Search, Filter, RefreshCw,
   ExternalLink, UserCheck, AlertTriangle, Lock, Cpu, Sparkles,
   ChevronRight, Award, Check, Layers, ArrowUpRight, ShieldAlert,
@@ -76,7 +76,27 @@ interface RoleMatrixItem {
   permissions: Record<string, boolean>;
 }
 
-export default function AdminGovernanceHub() {
+interface AdminGovernanceHubProps {
+  currentUser?: any;
+  onUpdateUser?: (user: any) => void;
+}
+
+export default function AdminGovernanceHub({ currentUser, onUpdateUser }: AdminGovernanceHubProps = {}) {
+  const adminFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleAdminPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const updated = { ...(currentUser || {}), photo: dataUrl };
+      if (onUpdateUser) {
+        onUpdateUser(updated);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
   const [activeTab, setActiveTab] = useState<'TENANTS' | 'WORKSPACES' | 'USERS' | 'ROLES' | 'SECURITY'>('USERS');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -307,14 +327,36 @@ export default function AdminGovernanceHub() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Left: Super Admin Identity */}
           <div className="flex items-center space-x-5">
-            {/* Glowing Golden & Cyan Crown Avatar */}
-            <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-1 shadow-xl shadow-cyan-500/20">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-bold text-2xl text-cyan-300">
-                  RH
+            {/* Glowing Golden & Cyan Crown Circular Avatar with Photo */}
+            <input
+              type="file"
+              ref={adminFileInputRef}
+              onChange={handleAdminPhotoUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <div 
+              className="relative group cursor-pointer" 
+              onClick={() => adminFileInputRef.current?.click()}
+              title="Click to upload/change profile photo"
+            >
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[3px] shadow-2xl shadow-cyan-500/30 group-hover:scale-105 transition-all duration-300">
+                <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
+                  <img
+                    src={currentUser?.photo || '/reda_hafez_avatar.jpg'}
+                    alt="Reda Hafez"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      (e.target as any).style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-full text-white">
+                    <Camera className="w-5 h-5 text-cyan-300 mb-0.5" />
+                    <span className="text-[9px] font-bold text-cyan-200">Change</span>
+                  </div>
                 </div>
               </div>
-              <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 shadow-md">
+              <span className="absolute -top-1 -right-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 shadow-md z-10">
                 👑 ROOT
               </span>
             </div>
