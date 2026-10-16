@@ -234,11 +234,11 @@ export default function Sidebar({
                 <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
                   <img
                     key={currentUser?.photo || 'default'}
-                    src={currentUser?.photo || '/reda_hafez_avatar.jpg'}
+                    src={currentUser?.photo || '/Reda-Hafez.jpg'}
                     alt={currentUser?.name || 'User'}
                     className="w-full h-full object-cover rounded-full"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
+                      (e.currentTarget as HTMLImageElement).src = '/Reda-Hafez.jpg';
                     }}
                   />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">

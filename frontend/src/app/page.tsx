@@ -94,7 +94,7 @@ export default function Home() {
       if (savedUser) {
         try {
           const parsed = JSON.parse(savedUser);
-          if (!parsed.photo) parsed.photo = '/reda_hafez_avatar.jpg';
+          if (!parsed.photo) parsed.photo = '/Reda-Hafez.jpg';
           return parsed;
         } catch {}
       }
@@ -104,7 +104,7 @@ export default function Home() {
       name: "Reda Hafez",
       email: "reda.hafez@horusagent.ai",
       avatar: "RH",
-      photo: "/reda_hafez_avatar.jpg",
+      photo: "/Reda-Hafez.jpg",
       role: "SUPER_ADMIN",
       role_title: "Platform Super Admin & Chief Architect",
       is_super_admin: true,

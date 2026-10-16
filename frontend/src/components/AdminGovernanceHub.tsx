@@ -378,7 +378,7 @@ export default function AdminGovernanceHub({ currentUser, onUpdateUser }: AdminG
               <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[3px] shadow-2xl shadow-cyan-500/30 group-hover:scale-105 transition-all duration-300">
                 <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
                   <img
-                    src={currentUser?.photo || '/reda_hafez_avatar.jpg'}
+                    src={currentUser?.photo || '/Reda-Hafez.jpg'}
                     alt="Reda Hafez"
                     className="w-full h-full object-cover rounded-full"
                     onError={(e) => {

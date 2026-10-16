@@ -153,7 +153,7 @@ export default function Header({
 
   // Reset to default executive portrait
   const handleResetPhoto = () => {
-    const updated = { ...(currentUser || {}), photo: '/reda_hafez_avatar.jpg' };
+    const updated = { ...(currentUser || {}), photo: '/Reda-Hafez.jpg' };
     if (onUpdateUser) {
       onUpdateUser(updated);
     }
@@ -161,7 +161,7 @@ export default function Header({
     setTimeout(() => setUploadStatus(null), 3000);
   };
 
-  const userPhoto = currentUser?.photo || '/reda_hafez_avatar.jpg';
+  const userPhoto = currentUser?.photo || '/Reda-Hafez.jpg';
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-6 py-2">
@@ -311,7 +311,7 @@ export default function Header({
                         alt={currentUser.name}
                         className="w-full h-full object-cover rounded-full"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
+                          (e.currentTarget as HTMLImageElement).src = '/Reda-Hafez.jpg';
                         }}
                       />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
@@ -359,7 +359,7 @@ export default function Header({
                               alt={currentUser.name}
                               className="w-full h-full object-cover rounded-full"
                               onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
+                                (e.currentTarget as HTMLImageElement).src = '/Reda-Hafez.jpg';
                               }}
                             />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-full text-white">
@@ -417,7 +417,7 @@ export default function Header({
                       )}
 
                       {/* Reset to executive portrait option */}
-                      {currentUser?.photo && currentUser.photo !== '/reda_hafez_avatar.jpg' && (
+                      {currentUser?.photo && currentUser.photo !== '/Reda-Hafez.jpg' && (
                         <button
                           onClick={handleResetPhoto}
                           className="mt-1.5 text-[9px] text-slate-400 hover:text-amber-300 underline font-mono transition"
