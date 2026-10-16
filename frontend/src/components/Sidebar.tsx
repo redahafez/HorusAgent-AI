@@ -183,20 +183,20 @@ export default function Sidebar({
               <button
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 text-left ${
                   isActive
                     ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/10'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
                 }`}
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
-                  <span>{item.label}</span>
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  <span className="whitespace-nowrap truncate text-left">{item.label}</span>
                 </div>
 
                 {item.badge && (
                   <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex-shrink-0 ml-2 ${
                       item.id === 'ROUTER'
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : item.id === 'APPROVALS'
@@ -301,7 +301,7 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop Persistent Sidebar */}
-      <aside className="w-64 flex-shrink-0 hidden lg:block sticky top-0 h-screen z-30">
+      <aside className="w-72 flex-shrink-0 hidden lg:block sticky top-0 h-screen z-30">
         {sidebarContent}
       </aside>
 
