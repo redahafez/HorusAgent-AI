@@ -114,10 +114,14 @@ export default function Home() {
   });
 
   const handleUpdateUser = (updatedUser: any) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('horus_user', JSON.stringify(updatedUser));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('horus_user', JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.warn('LocalStorage save error (quota exceeded):', err);
     }
-    setCurrentUser(updatedUser);
+    setCurrentUser({ ...updatedUser });
   };
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 

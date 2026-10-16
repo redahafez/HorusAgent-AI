@@ -81,21 +81,56 @@ interface AdminGovernanceHubProps {
   onUpdateUser?: (user: any) => void;
 }
 
+// Client-side image compressor & square cropper for avatars
+const compressAndResizeAvatar = (file: File, maxSize = 320): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const size = Math.min(width, height);
+        const startX = (width - size) / 2;
+        const startY = (height - size) / 2;
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, startX, startY, size, size, 0, 0, maxSize, maxSize);
+          resolve(canvas.toDataURL('image/jpeg', 0.90));
+        } else {
+          resolve(e.target?.result as string);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function AdminGovernanceHub({ currentUser, onUpdateUser }: AdminGovernanceHubProps = {}) {
   const adminFileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const handleAdminPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAdminPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const updated = { ...(currentUser || {}), photo: dataUrl };
+    try {
+      const compressedDataUrl = await compressAndResizeAvatar(file, 320);
+      const updated = { ...(currentUser || {}), photo: compressedDataUrl };
       if (onUpdateUser) {
         onUpdateUser(updated);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error optimizing image:', err);
+    } finally {
+      if (adminFileInputRef.current) {
+        adminFileInputRef.current.value = '';
+      }
+    }
   };
   const [activeTab, setActiveTab] = useState<'TENANTS' | 'WORKSPACES' | 'USERS' | 'ROLES' | 'SECURITY'>('USERS');
   const [tenants, setTenants] = useState<Tenant[]>([]);

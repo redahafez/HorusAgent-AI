@@ -22,6 +22,37 @@ interface SidebarProps {
   onUpdateUser?: (user: any) => void;
 }
 
+// Client-side image compressor & square cropper for avatars
+const compressAndResizeAvatar = (file: File, maxSize = 320): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const size = Math.min(width, height);
+        const startX = (width - size) / 2;
+        const startY = (height - size) / 2;
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, startX, startY, size, size, 0, 0, maxSize, maxSize);
+          resolve(canvas.toDataURL('image/jpeg', 0.90));
+        } else {
+          resolve(e.target?.result as string);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function Sidebar({
   activeTab,
   onSelectTab,
@@ -34,6 +65,25 @@ export default function Sidebar({
   onLogout,
   onUpdateUser
 }: SidebarProps) {
+  const sidebarFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleSidebarFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressedDataUrl = await compressAndResizeAvatar(file, 320);
+      const updated = { ...(currentUser || {}), photo: compressedDataUrl };
+      if (onUpdateUser) {
+        onUpdateUser(updated);
+      }
+    } catch (err) {
+      console.error('Error optimizing image:', err);
+    } finally {
+      if (sidebarFileInputRef.current) {
+        sidebarFileInputRef.current.value = '';
+      }
+    }
+  };
   const navItems = [
     {
       id: 'OVERVIEW' as NavTabType,
@@ -169,16 +219,31 @@ export default function Sidebar({
         {currentUser ? (
           <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950/30 border border-slate-800 flex items-center justify-between shadow-inner">
             <div className="flex items-center space-x-2.5 truncate">
-              <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25">
-                <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center">
+              <input
+                type="file"
+                ref={sidebarFileInputRef}
+                onChange={handleSidebarFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <div 
+                onClick={() => sidebarFileInputRef.current?.click()}
+                className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25 cursor-pointer group hover:scale-105 transition-transform"
+                title="Click avatar to choose/upload photo from computer"
+              >
+                <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
                   <img
-                    src={currentUser.photo || '/reda_hafez_avatar.jpg'}
-                    alt={currentUser.name}
+                    key={currentUser?.photo || 'default'}
+                    src={currentUser?.photo || '/reda_hafez_avatar.jpg'}
+                    alt={currentUser?.name || 'User'}
                     className="w-full h-full object-cover rounded-full"
                     onError={(e) => {
-                      (e.target as any).style.display = 'none';
+                      (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
                     }}
                   />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                    <Camera className="w-3.5 h-3.5 text-cyan-300" />
+                  </div>
                 </div>
               </div>
               <div className="truncate text-left">

@@ -9,6 +9,41 @@ import {
 } from 'lucide-react';
 import { NavTabType } from './Sidebar';
 
+// Client-side image compressor & square cropper for avatars
+const compressAndResizeAvatar = (file: File, maxSize = 320): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Center-crop to 1:1 square
+        const size = Math.min(width, height);
+        const startX = (width - size) / 2;
+        const startY = (height - size) / 2;
+
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, startX, startY, size, size, 0, 0, maxSize, maxSize);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.90);
+          resolve(compressedDataUrl);
+        } else {
+          resolve(e.target?.result as string);
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
 interface HeaderProps {
   isConnected: boolean;
   isStreaming: boolean;
@@ -47,6 +82,7 @@ export default function Header({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -67,8 +103,8 @@ export default function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle local image file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local image file upload with instant downscaling
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -77,23 +113,35 @@ export default function Header({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const updated = { ...(currentUser || {}), photo: dataUrl };
+    setIsProcessing(true);
+    setUploadStatus('Optimizing image...');
+
+    try {
+      const compressedDataUrl = await compressAndResizeAvatar(file, 320);
+      const updated = { ...(currentUser || {}), photo: compressedDataUrl };
+      
       if (onUpdateUser) {
         onUpdateUser(updated);
       }
+      
       setUploadStatus('Photo updated successfully!');
       setTimeout(() => setUploadStatus(null), 3000);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error optimizing image:', err);
+      alert('Failed to process image. Please try another file.');
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Handle applying image URL
   const handleApplyUrl = () => {
     if (!customPhotoUrl.trim()) return;
-    const updated = { ...(currentUser || {}), photo: customPhotoUrl.trim() };
+    const url = customPhotoUrl.trim();
+    const updated = { ...(currentUser || {}), photo: url };
     if (onUpdateUser) {
       onUpdateUser(updated);
     }
@@ -246,42 +294,52 @@ export default function Header({
             <div className="flex flex-col items-end space-y-1.5 flex-shrink-0">
               {/* Row 1: User Profile Pill with Circular Avatar and Colorful Glowing Ring */}
               <div className="relative" ref={profileRef}>
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-2.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition shadow-sm shadow-cyan-500/10 group"
-                  title="Account identity & profile settings"
-                >
-                  {/* Profile Avatar: Circular with Vibrant Colorful Gradient Ring */}
-                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25 group-hover:scale-105 transition-transform">
+                <div className="flex items-center p-0.5 rounded-xl bg-gradient-to-r from-slate-900/90 to-indigo-950/40 border border-cyan-500/30 hover:border-cyan-500/60 transition shadow-sm shadow-cyan-500/10">
+                  {/* Avatar with Direct Click-to-Upload */}
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2px] flex-shrink-0 shadow-md shadow-cyan-500/25 cursor-pointer group hover:scale-105 transition-transform"
+                    title="Click avatar to choose/upload photo from computer"
+                  >
                     <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
                       <img
+                        key={userPhoto}
                         src={userPhoto}
                         alt={currentUser.name}
                         className="w-full h-full object-cover rounded-full"
                         onError={(e) => {
-                          (e.target as any).src = '/reda_hafez_avatar.jpg';
+                          (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
                         }}
                       />
-                      {/* Subtle camera icon on hover */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                         <Camera className="w-3.5 h-3.5 text-cyan-300" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="hidden md:block">
-                    <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
-                      <span>{currentUser.name}</span>
-                      <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
-                        {currentUser.is_super_admin ? 'ROOT' : currentUser.role?.replace('_', ' ')}
-                      </span>
+                  {/* Name, Role & Dropdown trigger */}
+                  <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center space-x-2 pl-2 pr-2 py-0.5 text-left"
+                    title="Account profile menu"
+                  >
+                    <div className="hidden md:block">
+                      <div className="text-[11px] font-bold text-white leading-tight flex items-center space-x-1">
+                        <span>{currentUser.name}</span>
+                        <span className="text-[9px] px-1 rounded bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+                          {currentUser.is_super_admin ? 'ROOT' : currentUser.role?.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-cyan-400 font-mono leading-tight">
+                        {currentUser.role_title || 'Platform Super Admin & Chief Architect'}
+                      </div>
                     </div>
-                    <div className="text-[9px] text-cyan-400 font-mono leading-tight">
-                      {currentUser.role_title || 'Platform Super Admin & Chief Architect'}
-                    </div>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
-                </button>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+                  </button>
+                </div>
 
                 {/* Profile Dropdown Menu */}
                 {showProfileMenu && (
@@ -291,21 +349,22 @@ export default function Header({
                       <div 
                         className="relative group cursor-pointer mb-2"
                         onClick={() => fileInputRef.current?.click()}
-                        title="Click to upload/change photo"
+                        title="Click to choose new photo"
                       >
                         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-amber-400 p-[2.5px] shadow-xl shadow-cyan-500/30 group-hover:scale-105 transition-transform">
                           <div className="w-full h-full bg-slate-950 rounded-full overflow-hidden flex items-center justify-center relative">
                             <img
+                              key={`dropdown-${userPhoto}`}
                               src={userPhoto}
                               alt={currentUser.name}
                               className="w-full h-full object-cover rounded-full"
                               onError={(e) => {
-                                (e.target as any).src = '/reda_hafez_avatar.jpg';
+                                (e.currentTarget as HTMLImageElement).src = '/reda_hafez_avatar.jpg';
                               }}
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-full text-white">
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-full text-white">
                               <Camera className="w-4 h-4 text-cyan-300 mb-0.5" />
-                              <span className="text-[8px] font-bold text-cyan-200">Upload</span>
+                              <span className="text-[8px] font-bold text-cyan-200">Change</span>
                             </div>
                           </div>
                         </div>
@@ -323,10 +382,11 @@ export default function Header({
                       <div className="flex items-center space-x-1.5 w-full justify-center">
                         <button
                           onClick={() => fileInputRef.current?.click()}
+                          disabled={isProcessing}
                           className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition"
                         >
                           <Camera className="w-3 h-3" />
-                          <span>Upload Photo</span>
+                          <span>{isProcessing ? 'Processing...' : 'Upload Photo'}</span>
                         </button>
                         <button
                           onClick={() => setShowUrlInput(!showUrlInput)}
