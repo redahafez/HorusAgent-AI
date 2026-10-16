@@ -5,7 +5,7 @@ import {
   GitBranch, Play, CheckCircle2, AlertTriangle, ShieldCheck,
   Search, Cpu, Scale, Shield, Terminal, Sparkles, Plus, Trash2,
   Settings, ZoomIn, ZoomOut, Maximize2, Download, Upload, Save,
-  RefreshCw, X, ChevronRight, Layers, ArrowRight, Activity,
+  RefreshCw, X, ChevronLeft, ChevronRight, Layers, ArrowRight, Activity,
   Sliders, Lock, Info, Check, CornerDownRight, Eye
 } from 'lucide-react';
 
@@ -87,6 +87,7 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
   const [connectingSourceId, setConnectingSourceId] = useState<string | null>(null);
 
   // Inspector & Modals
+  const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(false);
   const [validationReport, setValidationReport] = useState<ValidationReport | null>(null);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState<boolean>(false);
@@ -115,7 +116,13 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
         if (data.length > 0) {
           const initial = data[0];
           setActiveWorkflowId(initial.id);
-          setNodes(initial.nodes || []);
+          const adjustedNodes = (initial.nodes || []).map((node: CanvasNode, idx: number) => {
+            if (node.position.x < 280) {
+              return { ...node, position: { ...node.position, x: 290 + idx * 350 } };
+            }
+            return node;
+          });
+          setNodes(adjustedNodes);
           setEdges(initial.edges || []);
           setWorkflowName(initial.name);
           setWorkflowCategory(initial.category);
@@ -135,7 +142,13 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
     const wf = workflows.find((w) => w.id === wfId);
     if (!wf) return;
     setActiveWorkflowId(wf.id);
-    setNodes(wf.nodes || []);
+    const adjustedNodes = (wf.nodes || []).map((node: CanvasNode, idx: number) => {
+      if (node.position.x < 280) {
+        return { ...node, position: { ...node.position, x: 290 + idx * 350 } };
+      }
+      return node;
+    });
+    setNodes(adjustedNodes);
     setEdges(wf.edges || []);
     setWorkflowName(wf.name);
     setWorkflowCategory(wf.category);
@@ -234,15 +247,24 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
   // Add Node from Palette
   const handleAddNode = (role: CanvasNode['role'], name: string, desc: string, defaultModel: string) => {
     const newId = `node-${role.toLowerCase()}-${Date.now().toString().slice(-4)}`;
-    // Position node around canvas center with slight offset
+    // Smart placement to prevent overlapping with existing nodes
+    const existingXs = nodes.map((n) => n.position.x);
+    const maxX = existingXs.length > 0 ? Math.max(...existingXs) : 290;
+    let nextX = maxX + 350;
+    let nextY = 180;
+    if (nextX > 1800) {
+      nextX = 290 + (nodes.length % 3) * 350;
+      nextY = 460;
+    }
+
     const newNode: CanvasNode = {
       id: newId,
       name,
       role,
       description: desc,
       position: {
-        x: Math.round((-pan.x + 300 + Math.random() * 80) / zoom),
-        y: Math.round((-pan.y + 200 + Math.random() * 80) / zoom)
+        x: nextX,
+        y: nextY
       },
       config: {
         model: defaultModel,
@@ -257,7 +279,6 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
     };
     setNodes((prev) => [...prev, newNode]);
     setSelectedNodeId(newId);
-    setIsInspectorOpen(true);
     showToast(`Added '${name}' agent node to canvas.`, 'success');
   };
 
@@ -601,91 +622,125 @@ export default function VisualWorkflowStudio({ onSwitchToConsole }: VisualWorkfl
       {/* ======================================================== */}
       <div className="relative flex-1 w-full h-full overflow-hidden flex">
         {/* Left Floating Agent Palette */}
-        <div className="absolute top-4 left-4 z-20 w-56 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-slate-800 p-3 shadow-2xl space-y-2 text-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <span className="font-bold text-white text-[11px] uppercase tracking-wider font-mono">
-              Agent Palette
-            </span>
-            <span className="text-[10px] text-cyan-400 font-mono">+ Click to Add</span>
+        {isPaletteOpen ? (
+          <div className="absolute top-4 left-4 z-20 w-60 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-800 p-3 shadow-2xl space-y-2 text-xs animate-fadeIn">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center space-x-1.5">
+                <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="font-bold text-white text-[11px] uppercase tracking-wider font-mono">
+                  Agent Palette
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() =>
+                    handleAddNode('RESEARCHER', 'Custom Agent', 'Retrieves knowledge & tools', 'llama-3.3-70b-versatile')
+                  }
+                  className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono font-bold bg-cyan-950/50 hover:bg-cyan-900/70 border border-cyan-500/30 px-2 py-0.5 rounded-md transition active:scale-95 flex items-center space-x-1 cursor-pointer"
+                  title="Click to add custom agent node"
+                >
+                  <Plus className="w-3 h-3 text-cyan-400" />
+                  <span>Click to Add</span>
+                </button>
+                <button
+                  onClick={() => setIsPaletteOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  title="Collapse Agent Palette"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <button
+                onClick={() =>
+                  handleAddNode('RESEARCHER', 'Vector RAG Grounding', 'Retrieves 128-dim citations', 'llama-3.3-70b-versatile')
+                }
+                className="w-full text-left p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/20 hover:border-cyan-500/60 hover:bg-cyan-950/50 transition flex items-center space-x-2 group cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-[11px] group-hover:text-cyan-300 transition-colors">Researcher Agent</div>
+                  <div className="text-[9px] text-slate-400">Vector Knowledge</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleAddNode('ARCHITECT', 'System Synthesis', 'Generates architectures & code', 'claude-3-5-sonnet')
+                }
+                className="w-full text-left p-2 rounded-xl bg-indigo-950/30 border border-indigo-500/20 hover:border-indigo-500/60 hover:bg-indigo-950/50 transition flex items-center space-x-2 group cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
+                  <Cpu className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-[11px] group-hover:text-indigo-300 transition-colors">Architect Agent</div>
+                  <div className="text-[9px] text-slate-400">Code &amp; Topology</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleAddNode('CRITIC', 'Anti-Hallucination Critic', 'Scores factual consistency', 'gpt-4o')
+                }
+                className="w-full text-left p-2 rounded-xl bg-amber-950/30 border border-amber-500/20 hover:border-amber-500/60 hover:bg-amber-950/50 transition flex items-center space-x-2 group cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
+                  <Scale className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-[11px] group-hover:text-amber-300 transition-colors">Critic Agent</div>
+                  <div className="text-[9px] text-slate-400">Self-Reflection Audit</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleAddNode('GOVERNANCE', 'Regulatory Seal Guard', 'Applies SHA-256 seal', 'horus-cognitive-v2-local')
+                }
+                className="w-full text-left p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/20 hover:border-emerald-500/60 hover:bg-emerald-950/50 transition flex items-center space-x-2 group cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-[11px] group-hover:text-emerald-300 transition-colors">Governance Agent</div>
+                  <div className="text-[9px] text-slate-400">21 CFR 11 &amp; PII</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleAddNode('TEST_RUNNER', 'Pytest Sandbox CI', 'Executes test containers', 'horus-cognitive-v2-local')
+                }
+                className="w-full text-left p-2 rounded-xl bg-purple-950/30 border border-purple-500/20 hover:border-purple-500/60 hover:bg-purple-950/50 transition flex items-center space-x-2 group cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
+                  <Terminal className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-[11px] group-hover:text-purple-300 transition-colors">Pytest Sandbox</div>
+                  <div className="text-[9px] text-slate-400">Isolated Execution</div>
+                </div>
+              </button>
+            </div>
           </div>
-
-          <div className="space-y-1.5">
-            <button
-              onClick={() =>
-                handleAddNode('RESEARCHER', 'Vector RAG Grounding', 'Retrieves 128-dim citations', 'llama-3.3-70b-versatile')
-              }
-              className="w-full text-left p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/20 hover:border-cyan-500/60 transition flex items-center space-x-2"
-            >
-              <div className="w-6 h-6 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-                <Search className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="font-bold text-white text-[11px]">Researcher Agent</div>
-                <div className="text-[9px] text-slate-400">Vector Knowledge</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleAddNode('ARCHITECT', 'System Synthesis', 'Generates architectures & code', 'claude-3-5-sonnet')
-              }
-              className="w-full text-left p-2 rounded-xl bg-indigo-950/30 border border-indigo-500/20 hover:border-indigo-500/60 transition flex items-center space-x-2"
-            >
-              <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <Cpu className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="font-bold text-white text-[11px]">Architect Agent</div>
-                <div className="text-[9px] text-slate-400">Code &amp; Topology</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleAddNode('CRITIC', 'Anti-Hallucination Critic', 'Scores factual consistency', 'gpt-4o')
-              }
-              className="w-full text-left p-2 rounded-xl bg-amber-950/30 border border-amber-500/20 hover:border-amber-500/60 transition flex items-center space-x-2"
-            >
-              <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
-                <Scale className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="font-bold text-white text-[11px]">Critic Agent</div>
-                <div className="text-[9px] text-slate-400">Self-Reflection Audit</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleAddNode('GOVERNANCE', 'Regulatory Seal Guard', 'Applies SHA-256 seal', 'horus-cognitive-v2-local')
-              }
-              className="w-full text-left p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/20 hover:border-emerald-500/60 transition flex items-center space-x-2"
-            >
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="font-bold text-white text-[11px]">Governance Agent</div>
-                <div className="text-[9px] text-slate-400">21 CFR 11 &amp; PII</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                handleAddNode('TEST_RUNNER', 'Pytest Sandbox CI', 'Executes test containers', 'horus-cognitive-v2-local')
-              }
-              className="w-full text-left p-2 rounded-xl bg-purple-950/30 border border-purple-500/20 hover:border-purple-500/60 transition flex items-center space-x-2"
-            >
-              <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
-                <Terminal className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="font-bold text-white text-[11px]">Pytest Sandbox</div>
-                <div className="text-[9px] text-slate-400">Isolated Execution</div>
-              </div>
-            </button>
-          </div>
-        </div>
+        ) : (
+          <button
+            onClick={() => setIsPaletteOpen(true)}
+            className="absolute top-4 left-4 z-20 flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold shadow-2xl backdrop-blur-md transition-all active:scale-95 group cursor-pointer"
+            title="Open Agent Palette"
+          >
+            <Layers className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
+            <span>Agent Palette</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-300 ml-1" />
+          </button>
+        )}
 
         {/* Main Canvas Viewport */}
         <div
