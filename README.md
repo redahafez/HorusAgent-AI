@@ -344,7 +344,7 @@ HorusAgent-AI includes an automated test suite verifying DAG compilation, anti-h
 
 ```bash
 # Run backend pytest suite inside container
-docker exec -e PYTHONPATH=/app horus_backend pytest -v
+docker exec horus_backend pytest -v
 ```
 
 ### Test Results
@@ -364,6 +364,18 @@ tests/test_rag.py::test_vector_store_seed_and_search PASSED              [100%]
 
 ======================== 12 passed in 3.61s (100% OK) ========================
 ```
+
+---
+
+## 🤝 Contributing & Community
+
+We welcome developers, AI researchers, and contributors from around the world to collaborate and help build the future of autonomous agentic systems!
+
+- 📖 **Contribution Guidelines**: Please read our [**`CONTRIBUTING.md`**](CONTRIBUTING.md) for local development setup, extension points (new agents, LLM providers, DAG templates), and pull request workflows.
+- 📜 **Code of Conduct**: We adhere to the [**`CODE_OF_CONDUCT.md`**](CODE_OF_CONDUCT.md) to ensure an inclusive, welcoming community.
+- 🐛 **Report a Bug**: Submit a structured [Bug Report](https://github.com/redahafez/HorusAgent-AI/issues/new?template=bug_report.md).
+- 💡 **Request a Feature**: Propose an enhancement via [Feature Request](https://github.com/redahafez/HorusAgent-AI/issues/new?template=feature_request.md).
+- 🤖 **Propose a New Agent**: Design and submit a [New AI Agent Proposal](https://github.com/redahafez/HorusAgent-AI/issues/new?template=new_agent_proposal.md).
 
 ---
 
